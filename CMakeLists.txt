@@ -3,19 +3,21 @@ project(RideSync)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(RideSync
-        main.cpp
-        DestinationManager.cpp
-        TrafficLight.cpp
-        TrafficLightFetcher.cpp
-        UpdateLoopController.cpp
-        SpeedAdvisor.cpp
-        RoutePlanner.cpp
-        PositionTracker.cpp
-
+# Include-Pfade für Header-Dateien
+include_directories(
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/external/json
+        ${CMAKE_SOURCE_DIR}/external/TinyGPS++
 )
 
-# LEDController.cpp
+# Source-Dateien (aus dem src-Verzeichnis + main.cpp)
+file(GLOB_RECURSE SOURCES
+        src/*.cpp
+        main.cpp
+)
 
-#include_directories(${CMAKE_SOURCE_DIR}/external/TinyGPS++)
-#external/TinyGPS++/TinyGPS++.cpp
+add_executable(RideSync ${SOURCES})
+
+# Falls TinyGPS++ eine eigene .cpp Datei hat, kannst du sie so einbinden:
+# add_library(TinyGPSPlus external/TinyGPS++/TinyGPS++.cpp)
+# target_link_libraries(RideSync TinyGPSPlus)
