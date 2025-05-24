@@ -34,11 +34,13 @@ class UpdateLoopController:
         """
         Startet die Endlosschleife, führt jede Sekunde ein Update durch.
         """
+        duration = 0
         while True:
-            self.update_cycle()
+            self.update_cycle(duration)
             time.sleep(1)
+            duration = duration + 1
 
-    def update_cycle(self) -> None:
+    def update_cycle(self, duration) -> None:
         """
         Ein Zyklus: Position, Route, Ampeln, Geschwindigkeit, Anweisung.
         """
@@ -52,6 +54,10 @@ class UpdateLoopController:
         # 3. Route berechnen
         route: List[Tuple[float, float]] = compute_route(current_position, destination)
 
+        # current position mocker, drive to destination
+        tracker = PositionTracker()
+        current_position: Tuple[float, float] = tracker.get_current_position_mock(route, duration)
+        print(f"Current position: {current_position}")
         # 4. Route im Selector setzen
         self.selector.set_route(route)
 
