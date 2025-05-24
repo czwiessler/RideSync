@@ -29,6 +29,3 @@ def compute_route(start: Tuple[float, float], end: Tuple[float, float]) -> List[
     return route
 
 
-# TODO:
-# - Später: Integration mit OSM/OSRM oder Graphhopper
-# - Einlesen von GPX/JSON-Dateien
