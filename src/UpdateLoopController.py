@@ -57,7 +57,6 @@ class UpdateLoopController:
         # current position mocker, drive to destination
         tracker = PositionTracker()
         current_position: Tuple[float, float] = tracker.get_current_position_mock(route, duration)
-        print(f"Current position: {current_position}")
         # 4. Route im Selector setzen
         self.selector.set_route(route)
 

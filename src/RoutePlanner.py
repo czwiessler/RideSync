@@ -39,8 +39,8 @@ def compute_route(start: Tuple[float, float], end: Tuple[float, float]) -> List[
     data = resp.json()
 
     #printe das json in lesbarer form
-    import json
-    print(json.dumps(data, indent=2))
+    #import json
+    #print(json.dumps(data, indent=2))
 
 
     # GeoJSON FeatureCollection → erstes Feature → geometry.coordinates
