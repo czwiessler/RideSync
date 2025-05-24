@@ -18,7 +18,7 @@ def main():
         lat, lon = float(lat_str), float(lon_str)
     except (ValueError, IndexError):
         print("Ungültige Eingabe. Standardziel wird verwendet.", file=sys.stderr)
-        lat, lon = 50.948270, 6.932673  # Standard: Köln Dom
+        lat, lon = 50.938605, 6.924940  # Standard: Köln Dom
 
     DestinationManager.set_destination((lat, lon))
     print(f"Ziel gesetzt: {lat}, {lon}")

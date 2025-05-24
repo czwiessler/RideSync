@@ -17,8 +17,8 @@ class PositionTracker:
         :return: Tuple[float, float] mit (latitude, longitude)
         """
         # === Mock-Modus ===
-        latitude: float = 50.9375  # Beispiel: Köln Dom
-        longitude: float = 6.9603
+        latitude: float = 50.948172  # Beispiel: Köln Dom
+        longitude: float = 6.932064
         return (latitude, longitude)
 
         # === Original TinyGPS++-Logik (später) ===
