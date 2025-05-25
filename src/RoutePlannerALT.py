@@ -1,6 +1,5 @@
 # route_planner.py
 """
-Python-Übersetzung von RoutePlanner (C++).
 Berechnet eine einfache, lineare Route in 10 Schritten.
 """
 

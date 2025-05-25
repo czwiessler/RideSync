@@ -13,12 +13,12 @@ def main():
 
     # === Ziel setzen ===
     try:
-        user_input = input("Bitte Zielkoordinaten eingeben (Latitude Longitude): ")
+        user_input = "u"#input("Bitte Zielkoordinaten eingeben (Latitude Longitude): ")
         lat_str, lon_str = user_input.strip().split()
         lat, lon = float(lat_str), float(lon_str)
     except (ValueError, IndexError):
         print("Ungültige Eingabe. Standardziel wird verwendet.", file=sys.stderr)
-        lat, lon = 50.944464, 6.928108
+        lat, lon = 50.948202, 6.932382 #50.944464, 6.928108
 
     DestinationManager.set_destination((lat, lon))
     print(f"Ziel gesetzt: {lat}, {lon}")

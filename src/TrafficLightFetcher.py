@@ -1,6 +1,5 @@
 # traffic_light_fetcher.py
 """
-Python-Übersetzung der C++-Klasse TrafficLightFetcher.
 Lädt Ampeldaten aus einer GeoJSON-Datei und liefert relevante Ampeln entlang einer Route.
 """
 from typing import List, Tuple
@@ -54,10 +53,15 @@ class TrafficLightFetcher:
             lon, lat = coords[0], coords[1]
 
             # TODO: Hier sollten echte Grünphasen geladen werden, z.B. aus einem Attribut
-            phases: List[Phase] = [
-                (now + timedelta(seconds=10), now + timedelta(seconds=20)),
-                (now + timedelta(seconds=70), now + timedelta(seconds=80)),
-            ]
+            # Generiere mehrere Phasen für einen 130-Sekunden-Zyklus (10s grün, 120s rot)
+            cycle_duration = timedelta(seconds=5)  # Gesamtlänge eines Zyklus
+            green_duration = timedelta(seconds=5)   # Länge der Grünphase
+            num_cycles = 10  # Anzahl der vorgenerierten Zyklen
+            
+            phases: List[Phase] = []
+            for i in range(num_cycles):
+                cycle_start = now + (cycle_duration * i)
+                phases.append((cycle_start, cycle_start + green_duration))
             ##########
 
             tl = TrafficLight(float(lat), float(lon), phases)

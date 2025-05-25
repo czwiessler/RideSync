@@ -1,7 +1,7 @@
 """
-Python-Übersetzung des C++ UpdateLoopController.
 Steuert die Hauptschleife: Position erfassen, Route planen, Ampeln filtern, Geschwindigkeit berechnen.
 """
+import sys
 import time
 from typing import List, Tuple, Optional
 from datetime import datetime
@@ -14,7 +14,7 @@ from SpeedAdvisor import (
     compute_optimal_speed,
     get_current_speed,
     calculate_speed_diff,
-    translate_to_instruction,
+    translate_to_instruction, choose_best_phase_and_speed,
 )
 from TrafficLight import TrafficLight, Phase
 from TrafficLightSelector import TrafficLightSelector
@@ -39,11 +39,12 @@ class UpdateLoopController:
         while True:
             old_route = self.update_cycle(duration, old_route) ## delete duration and old_route if mock is removed
             time.sleep(1)
-            duration = duration + 1
+            duration += 1
 
     def update_cycle(self, duration, old_route): ## delete duration and old_route if mock is removed
         """
-        Ein Zyklus: Position, Route, Ampeln, Geschwindigkeit, Anweisung.
+        Ein Zyklus: Position, Route, Ampeln, Geschwindigkeit, Anweisung,
+        plus Logging, wenn eine Ampel passiert wurde.
         """
         # 1. Aktuelle Position holen
         current_position: Tuple[float, float] = PositionTracker.get_current_position()
@@ -59,6 +60,7 @@ class UpdateLoopController:
         current_position: Tuple[float, float] = tracker.get_current_position_mock(old_route, duration)
         #print(current_position)
         ##### MOCK ENDE
+
 
         # 2. Ziel abrufen
         destination: Tuple[float, float] = DestinationManager.get_destination()
@@ -77,7 +79,7 @@ class UpdateLoopController:
         traffic_lights: List[TrafficLight] = self.fetcher.get_relevant_traffic_lights(route)
         if not traffic_lights:
             print("Keine relevanten Ampeln auf der Route gefunden.")
-            return
+            return old_route
 
         # 6. Nächste Ampel auswählen
         next_light: Optional[TrafficLight] = self.selector.get_next_traffic_light(
@@ -87,14 +89,23 @@ class UpdateLoopController:
 
         if next_light is None:
             print("Keine nächste Ampel ermittelt.")
-            return
+            return old_route ## delete if mock is removed
 
         # 7. Nächste Grünphase abrufen
         now = datetime.now()
         green_window: Phase = next_light.get_next_green_phase(now)
+        # print the next green phase
+        #print(f"Nächste Grünphase: {green_window[0]} bis {green_window[1]}")
 
         # 8. Optimale Geschwindigkeit berechnen
-        v_opt: float = compute_optimal_speed(current_position, next_light, green_window)
+        #v_opt: float = compute_optimal_speed(current_position, next_light, green_window)
+        # irgendwo in UpdateLoopController:
+        phase, v_opt = choose_best_phase_and_speed(
+            current_position,
+            next_light,
+            next_light.green_phases
+        )
+
 
         # 9. Aktuelle Geschwindigkeit messen
         v_actual: float = get_current_speed()
@@ -104,6 +115,12 @@ class UpdateLoopController:
 
         # 11. In Anweisung übersetzen und ausgeben
         instruction: str = translate_to_instruction(v_diff)
-        print(f"V_optimal={v_opt:.2f} m/s | V_actual={v_actual:.2f} m/s -> {instruction}")
+        #print(f"V_optimal={v_opt:.2f} m/s | V_actual={v_actual:.2f} m/s -> {instruction}")
+        print(#f"Gewählte Phase: {phase}, "
+              f"Nächste Ampel: {next_light.get_location()}, "
+              #f"Aktuelle Geschwindigkeit: {v_actual:.2f} m/s, "
+              f"Zielspeed: {v_opt:.2f} m/s → {instruction}, "
+              f"Aktuelle Position: {current_position}, "
+              )
 
         return old_route ## delete if mock is removed

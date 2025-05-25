@@ -1,6 +1,5 @@
 # destination_manager.py
 """
-Python-Übersetzung von DestinationManager (C++).
 Verwaltet global gespeicherte Zielkoordinaten (Latitude, Longitude).
 """
 

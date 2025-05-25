@@ -1,10 +1,9 @@
 # speed_advisor.py
 """
-Python-Übersetzung der C++-Klasse SpeedAdvisor.
 Berechnet optimale Geschwindigkeit für die nächste Grünphase und gibt Anweisungen.
 """
 
-from typing import Tuple
+from typing import Tuple, List
 import math
 import datetime
 
@@ -65,7 +64,76 @@ def compute_optimal_speed(
 
     v_opt = (v_min + v_max) / 2.0
     v_opt = max(min(v_opt, MAX_SPEED), MIN_SPEED)
+    print(f"Ampel-Entfernung: {distance_m:.2f} m")
+    print(f"Zeit bis Grünstart: {time_until_start:.2f} s")
+    print(f"Zeit bis Grünende: {time_until_end:.2f} s")
+    print(f"v_min: {v_min:.2f}, v_max: {v_max:.2f}, v_opt: {v_opt:.2f}")
+
     return v_opt
+
+
+# Innerhalb speed_advisor.py
+
+PREFERRED_SPEED = 6.0  # dein „optimaler“ Speed in m/s
+
+def choose_best_phase_and_speed(
+    current_position: Tuple[float, float],
+    light: 'TrafficLight',
+    green_phases: List[Phase],
+    preferred_speed: float = PREFERRED_SPEED
+) -> Tuple[Phase, float]:
+    """
+    Wählt aus allen kommenden Grünphasen diejenige aus, deren
+    benötigte Geschwindigkeit am nächsten an preferred_speed liegt.
+    Gibt (gewählte Phase, Zielgeschwindigkeit) zurück.
+    """
+    now = datetime.datetime.now()
+    best_phase = None
+    best_v = None
+    best_cost = float('inf')
+
+    dist = haversine_distance(
+        current_position[0], current_position[1],
+        *light.get_location()
+    )
+
+    for start, end in green_phases:
+        # Phase schon vorbei?
+        if now >= end:
+            continue
+
+        # 1) Entscheidung, auf welchen Zeitpunkt timen:
+        if now < start:
+            target_time = start + (end - start) / 2
+        else:
+            target_time = end
+
+        t = max((target_time - now).total_seconds(), 1.0)
+        v_req = dist / t
+
+        # 2) Kostenfunktionen
+        #   – Basis: Abstand zum Wunschwert
+        cost = abs(v_req - preferred_speed)
+        #   – Extra-Strafe, wenn gerade unplausibel schnell/langsam
+        if v_req < MIN_SPEED or v_req > MAX_SPEED:
+            cost += 1000.0
+
+        # 3) Bester Kandidat?
+        if cost < best_cost:
+            best_cost = cost
+            best_phase = (start, end)
+            best_v = v_req
+
+    # Falls keine Phase mehr, Vollgas
+    if best_phase is None:
+        return (now, now), MAX_SPEED
+
+    # Begrenze Zielgeschwindigkeit auf erlaubte Range
+    v_opt = max(min(best_v, MAX_SPEED), MIN_SPEED)
+    return best_phase, v_opt
+
+
+
 
 
 def get_current_speed() -> float:

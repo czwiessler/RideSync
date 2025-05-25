@@ -1,6 +1,5 @@
 # traffic_light.py
 """
-Python-Übersetzung der C++-Klasse TrafficLight.
 Verwaltet Standort und Grünphasen einer Ampel.
 """
 
@@ -43,6 +42,9 @@ class TrafficLight:
         :return: Tuple (start_time, end_time)
         """
         # TODO: aktuell noch mock, weil Phasen nicht geladen werden
+        # print all green phases
+        #print("Grünphasen:", self.green_phases)
+
         # Suche erste Phase, deren Ende in der Zukunft liegt
         for phase in self.green_phases:
             if current_time < phase[1]:
