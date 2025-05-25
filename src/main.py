@@ -18,14 +18,14 @@ def main():
         lat, lon = float(lat_str), float(lon_str)
     except (ValueError, IndexError):
         print("Ungültige Eingabe. Standardziel wird verwendet.", file=sys.stderr)
-        lat, lon = 50.938605, 6.924940  # Standard: Köln Dom
+        lat, lon = 50.944464, 6.928108
 
     DestinationManager.set_destination((lat, lon))
     print(f"Ziel gesetzt: {lat}, {lon}")
 
     # TrafficLightFetcher vorbereiten
     fetcher = TrafficLightFetcher()
-    if not fetcher.load_from_json("traffic_light.json"):
+    if not fetcher.load_from_json("src/traffic_light.json"):
         print("Konnte traffic_light.json nicht laden.", file=sys.stderr)
         sys.exit(1)
 

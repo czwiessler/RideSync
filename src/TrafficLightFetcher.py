@@ -62,19 +62,67 @@ class TrafficLightFetcher:
         return True
 
     def get_relevant_traffic_lights(
-        self, route: List[Tuple[float, float]]
+        self, route: List[Tuple[float, float]], buffer: float = 2.0
     ) -> List[TrafficLight]:
         """
-        Gibt alle Ampeln zurück, die maximal 30 Meter von irgendeinem Punkt der Route entfernt sind.
+        Gibt alle Ampeln zurück, die maximal `buffer` Meter links und rechts entlang
+        der Route (als Polyline) liegen, sortiert nach ihrem Auftreten entlang der Route.
 
         :param route: Liste von Wegpunkten (lat, lon)
+        :param buffer: Abstand in Metern zur Route
         :return: Liste relevanter TrafficLight-Objekte
         """
-        relevant: List[TrafficLight] = []
+        relevant = []  # Liste von Tuplen (TrafficLight, segment_index, t)
+        if not route:
+            return []
+
+        from math import radians, cos, sqrt
+        R = 6371000.0  # Erdradius in Metern
+
+        def proj_and_distance(
+            lat_p: float, lon_p: float,
+            lat1: float, lon1: float,
+            lat2: float, lon2: float
+        ) -> Tuple[float, float]:
+            """
+            Berechnet die Projektion t (0-1) und Distanz (Meter) eines Punktes auf ein Liniensegment
+            via equirectangular Projektion.
+            """
+            mean_lat = radians((lat1 + lat2) / 2)
+            x1 = radians(lon1) * R * cos(mean_lat)
+            y1 = radians(lat1) * R
+            x2 = radians(lon2) * R * cos(mean_lat)
+            y2 = radians(lat2) * R
+            xp = radians(lon_p) * R * cos(mean_lat)
+            yp = radians(lat_p) * R
+
+            dx = x2 - x1
+            dy = y2 - y1
+            if dx == 0 and dy == 0:
+                return 0.0, sqrt((xp - x1) ** 2 + (yp - y1) ** 2)
+            t = ((xp - x1) * dx + (yp - y1) * dy) / (dx * dx + dy * dy)
+            t_clamped = max(0.0, min(1.0, t))
+            proj_x = x1 + t_clamped * dx
+            proj_y = y1 + t_clamped * dy
+            dist = sqrt((xp - proj_x) ** 2 + (yp - proj_y) ** 2)
+            return t_clamped, dist
+
+        # Finde relevante Ampeln mit Segment-Index und t
         for light in self._all_traffic_lights:
             lat_l, lon_l = light.get_location()
-            for lat_p, lon_p in route:
-                if self.haversine_distance(lat_l, lon_l, lat_p, lon_p) < 30.0:
-                    relevant.append(light)
-                    break
-        return relevant
+            best = None  # (segment_idx, t)
+            for idx, ((lat1, lon1), (lat2, lon2)) in enumerate(zip(route, route[1:])):
+                t, d = proj_and_distance(lat_l, lon_l, lat1, lon1, lat2, lon2)
+                if d <= buffer:
+                    if best is None or (idx, t) < best:
+                        best = (idx, t)
+            if best is not None:
+                relevant.append((light, best[0], best[1]))
+
+        # Sortiere nach Segment-Index und t entlang des Segments
+        relevant.sort(key=lambda item: (item[1], item[2]))
+
+        # Extrahiere nur die TrafficLight-Objekte
+        return [item[0] for item in relevant]
+
+
