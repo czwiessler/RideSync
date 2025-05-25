@@ -52,10 +52,14 @@ class TrafficLightFetcher:
             if len(coords) < 2:
                 continue
             lon, lat = coords[0], coords[1]
+
+            # TODO: Hier sollten echte Grünphasen geladen werden, z.B. aus einem Attribut
             phases: List[Phase] = [
                 (now + timedelta(seconds=10), now + timedelta(seconds=20)),
                 (now + timedelta(seconds=70), now + timedelta(seconds=80)),
             ]
+            ##########
+
             tl = TrafficLight(float(lat), float(lon), phases)
             self._all_traffic_lights.append(tl)
 

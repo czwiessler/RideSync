@@ -57,7 +57,7 @@ class UpdateLoopController:
             self.selector.set_route(old_route)
         tracker = PositionTracker()
         current_position: Tuple[float, float] = tracker.get_current_position_mock(old_route, duration)
-        print(current_position)
+        #print(current_position)
         ##### MOCK ENDE
 
         # 2. Ziel abrufen

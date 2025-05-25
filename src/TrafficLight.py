@@ -42,6 +42,7 @@ class TrafficLight:
         :param current_time: Aktueller Zeitpunkt
         :return: Tuple (start_time, end_time)
         """
+        # TODO: aktuell noch mock, weil Phasen nicht geladen werden
         # Suche erste Phase, deren Ende in der Zukunft liegt
         for phase in self.green_phases:
             if current_time < phase[1]:
