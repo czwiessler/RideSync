@@ -64,7 +64,7 @@ class PositionTracker:
             return route[0]
 
         # Total distance to travel based on 6 m/s speed
-        total_distance = duration * 3.0  # meters
+        total_distance = duration * 6.0  # meters
         traveled = 0.0
 
         # Walk through each segment

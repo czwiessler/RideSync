@@ -143,7 +143,7 @@ def get_current_speed() -> float:
     :return: Geschwindigkeit in m/s
     """
     # TODO: Tachomodul integrieren
-    return 5.0  # 5 m/s ≈ 18 km/h
+    return 100.0  # 5 m/s ≈ 18 km/h
 
 
 def calculate_speed_diff(target_speed: float, current_speed: float) -> float:

@@ -1,5 +1,6 @@
 """
-Steuert die Hauptschleife: Position erfassen, Route planen, Ampeln filtern, Geschwindigkeit berechnen.
+Steuert die Hauptschleife: Position erfassen, Route planen,
+Ampeln filtern, Geschwindigkeit berechnen und Events loggen.
 """
 import sys
 import time
@@ -14,7 +15,8 @@ from SpeedAdvisor import (
     compute_optimal_speed,
     get_current_speed,
     calculate_speed_diff,
-    translate_to_instruction, choose_best_phase_and_speed,
+    translate_to_instruction,
+    choose_best_phase_and_speed,
 )
 from TrafficLight import TrafficLight, Phase
 from TrafficLightSelector import TrafficLightSelector
@@ -29,6 +31,8 @@ class UpdateLoopController:
         self.fetcher = fetcher
         # Selector für nächste Ampel
         self.selector = TrafficLightSelector()
+        # Für Logging der Ampelpassage
+        self.last_next_light: Optional[TrafficLight] = None
 
     def start_loop(self) -> None:
         """
@@ -78,6 +82,20 @@ class UpdateLoopController:
         # 5. Relevante Ampeln filtern
         traffic_lights: List[TrafficLight] = self.fetcher.get_relevant_traffic_lights(route)
         if not traffic_lights:
+            # letzte Ampel loggen
+            if self.last_next_light is not None:
+                light = self.last_next_light
+                pass_time = datetime.now()
+                phase = light.get_next_green_phase(pass_time)
+                loc = light.get_location()
+                print(
+                    "\n=== 🚦 Ampel passiert 🚦 ===\n"
+                    f"Standort: {loc}\n"
+                    f"Tatsächliche nächste Grünphase: {phase[0].strftime('%d.%m.%Y %H:%M:%S')} bis {phase[1].strftime('%d.%m.%Y %H:%M:%S')}\n"
+                    f"Vorbeifahrtszeit: {pass_time.strftime('%d.%m.%Y %H:%M:%S')}\n"
+                    "============================\n"
+                )
+                self.last_next_light = None
             print("Keine relevanten Ampeln auf der Route gefunden.")
             return old_route
 
@@ -86,26 +104,38 @@ class UpdateLoopController:
             current_position,
             traffic_lights
         )
-
         if next_light is None:
             print("Keine nächste Ampel ermittelt.")
             return old_route ## delete if mock is removed
 
-        # 7. Nächste Grünphase abrufen
+        # 7. Prüfen, ob die vorherige Ampel passiert wurde
+        if self.last_next_light and next_light.get_location() != self.last_next_light.get_location():
+            light = self.last_next_light
+            pass_time = datetime.now()
+            phase = light.get_next_green_phase(pass_time)
+            loc = light.get_location()
+            print(
+                "\n=== 🚦 Ampel passiert 🚦 ===\n"
+                f"Standort: {loc}\n"
+                f"Tatsächliche nächste Grünphase: {phase[0].strftime('%d.%m.%Y %H:%M:%S')} bis {phase[1].strftime('%d.%m.%Y %H:%M:%S')}\n"
+                f"Vorbeifahrtszeit: {pass_time.strftime('%d.%m.%Y %H:%M:%S')}\n"
+                "============================\n"
+            )
+
+        # 7. Nächste Grünphase abrufen (für Logging, falls später benötigt)
         now = datetime.now()
-        green_window: Phase = next_light.get_next_green_phase(now)
+        #green_window: Phase = next_light.get_next_green_phase(now)
         # print the next green phase
         #print(f"Nächste Grünphase: {green_window[0]} bis {green_window[1]}")
 
-        # 8. Optimale Geschwindigkeit berechnen
-        #v_opt: float = compute_optimal_speed(current_position, next_light, green_window)
-        # irgendwo in UpdateLoopController:
+        # 8. Optimale Phase und Geschwindigkeit bestimmen
         phase, v_opt = choose_best_phase_and_speed(
             current_position,
             next_light,
             next_light.green_phases
         )
-
+        # Gewählte Phase für Geschwindigkeit
+        chosen_phase = phase
 
         # 9. Aktuelle Geschwindigkeit messen
         v_actual: float = get_current_speed()
@@ -115,12 +145,15 @@ class UpdateLoopController:
 
         # 11. In Anweisung übersetzen und ausgeben
         instruction: str = translate_to_instruction(v_diff)
-        #print(f"V_optimal={v_opt:.2f} m/s | V_actual={v_actual:.2f} m/s -> {instruction}")
-        print(#f"Gewählte Phase: {phase}, "
+        print(
+             #f"Gewählte Phase: {phase}, "
               f"Nächste Ampel: {next_light.get_location()}, "
+              f"Gewählte Grünphase: {chosen_phase[0].strftime('%H:%M:%S')}–{chosen_phase[1].strftime('%H:%M:%S')}, "
               #f"Aktuelle Geschwindigkeit: {v_actual:.2f} m/s, "
               f"Zielspeed: {v_opt:.2f} m/s → {instruction}, "
-              f"Aktuelle Position: {current_position}, "
+              #f"Aktuelle Position: {current_position}, "
               )
 
+        # 12. Für die nächste Iteration merken
+        self.last_next_light = next_light
         return old_route ## delete if mock is removed
