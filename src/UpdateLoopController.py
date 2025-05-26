@@ -12,7 +12,6 @@ from DestinationManager import DestinationManager
 from RoutePlanner import compute_route
 from TrafficLightFetcher import TrafficLightFetcher
 from SpeedAdvisor import (
-    compute_optimal_speed,
     get_current_speed,
     calculate_speed_diff,
     translate_to_instruction,

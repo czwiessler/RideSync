@@ -11,6 +11,7 @@ import datetime
 # Konstanten (m/s)
 MAX_SPEED = 10.0  # ca. 36 km/h
 MIN_SPEED = 1.0   # ca. 3.6 km/h
+PREFERRED_SPEED = 6.0  # dein „optimaler“ Speed in m/s
 
 TimePoint = datetime.datetime
 Phase = Tuple[TimePoint, TimePoint]
@@ -31,50 +32,6 @@ def haversine_distance(
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
-
-def compute_optimal_speed(
-    current_position: Tuple[float, float],
-    light: 'TrafficLight',
-    green_phase: Phase
-) -> float:
-    """
-    Berechnet die optimale Geschwindigkeit (m/s), um die nächste Grünphase zu erreichen.
-
-    :param current_position: Tuple (lat, lon)
-    :param light: TrafficLight-Objekt
-    :param green_phase: Tuple (start_time, end_time)
-    :return: Optimale Geschwindigkeit in m/s
-    """
-    now = datetime.datetime.now()
-    start_time, end_time = green_phase
-
-    distance_m = haversine_distance(
-        current_position[0], current_position[1],
-        *light.get_location()
-    )
-
-    time_until_start = (start_time - now).total_seconds()
-    time_until_end = (end_time - now).total_seconds()
-
-    if time_until_end <= 0:
-        return MAX_SPEED  # Grün vorbei → Vollgas
-
-    v_min = distance_m / max(time_until_end, 1.0)
-    v_max = distance_m / max(time_until_start, 1.0)
-
-    v_opt = (v_min + v_max) / 2.0
-    v_opt = max(min(v_opt, MAX_SPEED), MIN_SPEED)
-    print(f"Ampel-Entfernung: {distance_m:.2f} m")
-    print(f"Zeit bis Grünstart: {time_until_start:.2f} s")
-    print(f"Zeit bis Grünende: {time_until_end:.2f} s")
-    print(f"v_min: {v_min:.2f}, v_max: {v_max:.2f}, v_opt: {v_opt:.2f}")
-
-    return v_opt
-
-
-# Innerhalb speed_advisor.py
-
-PREFERRED_SPEED = 6.0  # dein „optimaler“ Speed in m/s
 
 def choose_best_phase_and_speed(
     current_position: Tuple[float, float],
@@ -131,8 +88,6 @@ def choose_best_phase_and_speed(
     # Begrenze Zielgeschwindigkeit auf erlaubte Range
     v_opt = max(min(best_v, MAX_SPEED), MIN_SPEED)
     return best_phase, v_opt
-
-
 
 
 
