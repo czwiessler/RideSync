@@ -1,7 +1,7 @@
 import sys
 import time
 from typing import List, Tuple, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 from route_visualizer import plot_route
@@ -17,7 +17,7 @@ from SpeedAdvisor import (
     translate_to_instruction,
     choose_best_phase_and_speed,
 )
-from TrafficLight import TrafficLight #, Phase
+from TrafficLight import TrafficLight, Phase
 from TrafficLightSelector import TrafficLightSelector
 
 
@@ -27,27 +27,27 @@ class UpdateLoopController:
         self.tl_selector = TrafficLightSelector()
         self.last_next_light: Optional[TrafficLight] = None
 
+        # Interaktiver Matplotlib-Modus für Live-Updates
         plt.ion()
         self.fig, self.ax = plt.subplots(figsize=(6, 8))
-        self.duration = timedelta(seconds=0)
 
     def start_loop(self) -> None:
+        duration = 0
         old_route: List[Tuple[float, float]] = []
         while True:
-            old_route = self.update_cycle(self.duration, old_route)
-            plt.pause(0.1)
+            old_route = self.update_cycle(duration, old_route)
+            plt.pause(0.1)  # Zeit für Matplotlib-Update
             time.sleep(1)
-            self.duration += timedelta(seconds=1)
+            duration += 1
 
-    def update_cycle(self, duration: timedelta, old_route):
+    def update_cycle(self, duration, old_route):
         current_position: Tuple[float, float] = PositionTracker.get_current_position()
         current_position = (50.948172, 6.932064)
 
         #nur damit die plot achsen sich nicht immer ändern
         conserved_start_point_for_plausible_plotting = current_position
 
-
-        if duration.seconds == 0:
+        if duration == 0:
             destination: Tuple[float, float] = DestinationManager.get_destination()
             old_route: List[Tuple[float, float]] = compute_route(current_position, destination)
             self.tl_selector.set_route(old_route)
@@ -72,48 +72,32 @@ class UpdateLoopController:
             self.ax.set_title("Keine nächste Ampel ermittelt")
             return old_route
 
-        if not next_light.mock_initialized:
-            print(f"\nNeue Ampel erkannt: {next_light.get_id()}")
-
-            # TODO unkommentieren, wenn phasen wieder in der eingabe gemockt werden sollen. (dann letzte zeile weg)
-            # try:
-            #     green = int(input("Grünphase in Sekunden (Default 10): ") or "10")
-            #     red = int(input("Rotphase in Sekunden (Default 40): ") or "40")
-            #     offset = int(input("Offset in Sekunden (Default 0): ") or "0")
-            # except ValueError:
-            #     print("Ungültige Eingabe, verwende Defaults.")
-            #     green, red, offset = 10, 40, 0
-            green, red, offset = 10, 40, 0
-
-            next_light.green_duration = timedelta(seconds=green)
-            next_light.red_duration = timedelta(seconds=red)
-            next_light.offset = timedelta(seconds=offset)
-            next_light.mock_initialized = True
-
         phase, v_opt = choose_best_phase_and_speed(
             current_position,
             next_light,
-            [next_light.get_next_green_phase(
-                current_time=duration
-            )],
-            now=duration
+            next_light.green_phases
         )
 
         v_actual = get_current_speed()
         v_diff = calculate_speed_diff(v_opt, v_actual)
         instruction = translate_to_instruction(v_diff)
 
-        self.ax.cla()
+        # === Visualisierung ===
+        self.ax.cla()  # vorherigen Plot löschen
 
+        # Ampelpositionen extrahieren
+        traffic_coords = [tl.get_location() for tl in traffic_lights]
+
+        # Plot aktualisieren
         plot_route(
             route=route,
             current_pos=current_position,
             destination=destination,
-            traffic_lights=traffic_lights,
+            traffic_lights=traffic_coords,
             conserved_start_point_for_plausible_plotting=conserved_start_point_for_plausible_plotting,
-            duration=duration,
         )
 
+        # Geschwindigkeitsanweisung als Text anzeigen
         self.ax.text(
             0.01, 0.99,
             f"{instruction}\nZielspeed: {v_opt:.2f} m/s",

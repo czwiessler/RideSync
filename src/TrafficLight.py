@@ -1,61 +1,71 @@
-# traffic_light.py
-"""
-Verwaltet Standort und Grünphasen einer Ampel.
-"""
-
-from typing import Tuple, List
+from typing import Tuple
 import datetime
-
+from datetime import timedelta
 
 TimePoint = datetime.datetime
-Phase = Tuple[TimePoint, TimePoint]
+
+datetime.timedelta
 
 
 class TrafficLight:
-    def __init__(self, lat: float, lon: float, phases: List[Phase]) -> None:
+    def __init__(self, id: str, lat: float, lon: float) -> None:
         """
-        Initialisiert eine Ampel mit Position und Liste von Grünphasen.
-
-        :param lat: Breitengrad
-        :param lon: Längengrad
-        :param phases: Liste von Tupeln (start_time, end_time)
+        Initialisiert eine Ampel mit Position und individuellen Zyklusparametern.
         """
+        self.id: str = id
         self.latitude: float = lat
         self.longitude: float = lon
-        self.green_phases: List[Phase] = phases
+
+        # Neue Mock-Parameter
+        self.green_duration: datetime.timedelta = datetime.timedelta(seconds=10)
+        self.red_duration: datetime.timedelta = datetime.timedelta(seconds=40)
+        self.offset: datetime.timedelta = datetime.timedelta(seconds=0)
+        self.mock_initialized: bool = False
 
     def get_location(self) -> Tuple[float, float]:
-        """
-        Liefert die Koordinaten der Ampel.
-
-        :return: (latitude, longitude)
-        """
         return (self.latitude, self.longitude)
 
-    def get_next_green_phase(self, current_time: TimePoint) -> Phase:
+    def get_id(self) -> str:
+        return f"{self.id}"
+
+
+    #TODO theoretisch müsste diese func iwann echtzeitphasendaten abrufen aber naja ne
+    def get_next_green_phase(
+            self,
+            current_time: timedelta
+    ) -> Tuple[timedelta, timedelta]:
         """
-        Gibt die nächste noch nicht abgelaufene Grünphase zurück.
-        Falls keine Phase mehr übrig ist, wird die erste Phase um 24h verschoben.
-        Wenn keine Phasen definiert sind, wird (now, now) zurückgegeben.
-
-        :param current_time: Aktueller Zeitpunkt
-        :return: Tuple (start_time, end_time)
+        Gibt die nächste Grünphase basierend auf individuellem Zyklus zurück.
         """
-        # TODO: aktuell noch mock, weil Phasen nicht geladen werden
-        # print all green phases
-        #print("Grünphasen:", self.green_phases)
+        cycle_length = self.green_duration + self.red_duration
+        start_time = current_time - self.offset  # theoretischer Zyklusstart
+        time_in_cycle = (current_time - start_time) % cycle_length
 
-        # Suche erste Phase, deren Ende in der Zukunft liegt
-        for phase in self.green_phases:
-            if current_time < phase[1]:
-                return phase
+        if time_in_cycle < self.green_duration:
+            phase_start = current_time - time_in_cycle
+        else:
+            time_to_next_green = cycle_length - time_in_cycle
+            phase_start = current_time + time_to_next_green
 
-        # Zyklisches Verhalten: erste Phase am nächsten Tag
-        if self.green_phases:
-            first_phase = self.green_phases[0]
-            delta = datetime.timedelta(days=1)
-            return (first_phase[0] + delta, first_phase[1] + delta)
+        return phase_start, phase_start + self.green_duration
 
-        # Keine Phasen: Dummy-Phase jetzt
-        now = datetime.datetime.now()
-        return (now, now)
+    #TODO theoretisch müsste diese func iwann echtzeitphasendaten abrufen aber naja ne
+    def get_phase(
+            self,
+            current_time: timedelta
+    ) -> Tuple[str, timedelta.seconds]: #'green' or 'red', phase rest duration
+
+        cycle_duration = self.green_duration + self.red_duration
+        # Zyklusstartzeit so berechnen, dass offset mit eingerechnet wird
+        start_time = timedelta(seconds=0) + self.offset
+        time_in_cycle = (current_time - start_time) % cycle_duration
+
+        if time_in_cycle < self.green_duration:
+            phase = 'green'
+            remaining = self.green_duration - time_in_cycle
+        else:
+            phase = 'red'
+            time_in_red = time_in_cycle - self.green_duration
+            remaining = self.red_duration - time_in_red
+
+        return phase, remaining

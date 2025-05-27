@@ -4,6 +4,7 @@ Holt aktuell GPS-Position im Mock-Modus.
 
 from typing import List, Tuple
 import math
+from datetime import timedelta
 
 
 class PositionTracker:
@@ -16,7 +17,7 @@ class PositionTracker:
         :return: Tuple[float, float] mit (latitude, longitude)
         """
         # === Mock-Modus ===
-        latitude: float = 50.948172  # Beispiel: Köln Dom
+        latitude: float = 50.948172
         longitude: float = 6.932064
         return (latitude, longitude)
         # TODO: Später echte GPS-Integration
@@ -48,7 +49,7 @@ class PositionTracker:
     def get_current_position_mock(
             self,
             route: List[Tuple[float, float]],
-            duration: float  # elapsed time in seconds
+            duration: timedelta  # elapsed time in seconds
     ) -> Tuple[float, float]:
         """
         Simulate the current position along a route, moving at 6 meters per second.
@@ -64,7 +65,7 @@ class PositionTracker:
             return route[0]
 
         # Total distance to travel based on 6 m/s speed
-        total_distance = duration * 6.0  # meters
+        total_distance = duration.seconds * 6.0  # meters
         traveled = 0.0
 
         # Walk through each segment

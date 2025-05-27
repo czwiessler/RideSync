@@ -8,7 +8,8 @@ import requests
 from typing import List, Tuple
 
 #ORS_API_KEY = os.getenv("ORS_API_KEY")
-ORS_API_KEY = "5b3ce3597851110001cf624845c31aefb65f430fbd3184463a7b9edb"
+#ORS_API_KEY = "5b3ce3597851110001cf624845c31aefb65f430fbd3184463a7b9edb"
+ORS_API_KEY = "5b3ce3597851110001cf62488edd5abcadf44e8fae1dd94890943db2"
 ORS_BASE_URL = "https://api.openrouteservice.org/v2/directions/driving-car"
 
 def compute_route(start: Tuple[float, float], end: Tuple[float, float]) -> List[Tuple[float, float]]:

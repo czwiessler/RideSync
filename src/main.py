@@ -6,6 +6,7 @@ import sys
 from DestinationManager import DestinationManager
 from TrafficLightFetcher import TrafficLightFetcher
 from UpdateLoopController import UpdateLoopController
+from src.PositionTracker import PositionTracker
 
 
 def main():
@@ -18,10 +19,12 @@ def main():
         lat, lon = float(lat_str), float(lon_str)
     except (ValueError, IndexError):
         print("Ungültige Eingabe. Standardziel wird verwendet.", file=sys.stderr)
-        lat, lon = 50.948202, 6.932382 #50.944464, 6.928108
+        lat, lon = 50.939174, 6.925188 #50.944464, 6.928108
 
     DestinationManager.set_destination((lat, lon))
     print(f"Ziel gesetzt: {lat}, {lon}")
+
+    print(f"Aktuelle Position: {PositionTracker.get_current_position()}") #TODO fertig schreiben)
 
     # TrafficLightFetcher vorbereiten
     fetcher = TrafficLightFetcher()

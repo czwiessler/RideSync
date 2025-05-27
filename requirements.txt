@@ -3,3 +3,4 @@ geopandas>=0.13.0
 shapely>=2.0.0
 pyproj
 requests
+matplotlib

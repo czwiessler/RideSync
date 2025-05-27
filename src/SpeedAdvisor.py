@@ -6,6 +6,7 @@ Berechnet optimale Geschwindigkeit für die nächste Grünphase und gibt Anweisu
 from typing import Tuple, List
 import math
 import datetime
+from datetime import timedelta
 
 
 # Konstanten (m/s)
@@ -13,7 +14,7 @@ MAX_SPEED = 10.0  # ca. 36 km/h
 MIN_SPEED = 1.0   # ca. 3.6 km/h
 
 TimePoint = datetime.datetime
-Phase = Tuple[TimePoint, TimePoint]
+Phase = Tuple[timedelta, timedelta]
 
 
 def haversine_distance(
@@ -35,7 +36,8 @@ def haversine_distance(
 def compute_optimal_speed(
     current_position: Tuple[float, float],
     light: 'TrafficLight',
-    green_phase: Phase
+    green_phase: Phase,
+    now: timedelta,
 ) -> float:
     """
     Berechnet die optimale Geschwindigkeit (m/s), um die nächste Grünphase zu erreichen.
@@ -45,7 +47,6 @@ def compute_optimal_speed(
     :param green_phase: Tuple (start_time, end_time)
     :return: Optimale Geschwindigkeit in m/s
     """
-    now = datetime.datetime.now()
     start_time, end_time = green_phase
 
     distance_m = haversine_distance(
@@ -53,8 +54,8 @@ def compute_optimal_speed(
         *light.get_location()
     )
 
-    time_until_start = (start_time - now).total_seconds()
-    time_until_end = (end_time - now).total_seconds()
+    time_until_start = (start_time - now)
+    time_until_end = (end_time - now)
 
     if time_until_end <= 0:
         return MAX_SPEED  # Grün vorbei → Vollgas
@@ -80,14 +81,14 @@ def choose_best_phase_and_speed(
     current_position: Tuple[float, float],
     light: 'TrafficLight',
     green_phases: List[Phase],
-    preferred_speed: float = PREFERRED_SPEED
+    now: timedelta,
+    preferred_speed: float = PREFERRED_SPEED,
 ) -> Tuple[Phase, float]:
     """
     Wählt aus allen kommenden Grünphasen diejenige aus, deren
     benötigte Geschwindigkeit am nächsten an preferred_speed liegt.
     Gibt (gewählte Phase, Zielgeschwindigkeit) zurück.
     """
-    now = datetime.datetime.now()
     best_phase = None
     best_v = None
     best_cost = float('inf')
@@ -108,8 +109,8 @@ def choose_best_phase_and_speed(
         else:
             target_time = end
 
-        t = max((target_time - now).total_seconds(), 1.0)
-        v_req = dist / t
+        t = max((target_time - now), timedelta(seconds=1))
+        v_req = dist / t.seconds
 
         # 2) Kostenfunktionen
         #   – Basis: Abstand zum Wunschwert
