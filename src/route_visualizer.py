@@ -1,132 +1,118 @@
 import matplotlib.pyplot as plt
+import contextily as ctx
 from typing import List
 from TrafficLight import TrafficLight
 from datetime import timedelta
+from pyproj import Transformer
+
+# Transformer von WGS84 (lat/lon) nach Web Mercator (EPSG:3857)
+transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+
 
 def plot_route(
-        route,
-        current_pos=None,
-        v_actual=None,
-        distance_to_next_tl=None,
-        destination=None,
-        traffic_lights: List[TrafficLight]=None,
-        conserved_start_point_for_plausible_plotting=None,
-        duration: timedelta=None):
-
+    route,
+    current_pos=None,
+    v_actual=None,
+    distance_to_next_tl=None,
+    destination=None,
+    traffic_lights: List[TrafficLight] = None,
+    conserved_start_point_for_plausible_plotting=None,
+    duration: timedelta = None
+):
     if not route:
         print("Keine Route zum Plotten übergeben.")
         return
 
+    # Originalkoordinaten extrahieren
     lats, lons = zip(*route)
+    # In Web Mercator transformieren
+    xs, ys = transformer.transform(lons, lats)
 
-    plt.figure(figsize=(6, 8))
-    plt.plot(lons, lats, marker='o', linestyle='-', linewidth=2, label="Route")
+    fig, ax = plt.subplots(figsize=(6, 8))
 
-    # Startpunkt: blauer 's'-Marker
+    # Basemap aus OpenStreetMap
+    ax.set_aspect('equal')
+    # Setze Extent auf den Routenbereich
+    margin = 100  # Meter Rand
+    x_min, x_max = min(xs) - margin, max(xs) + margin
+    y_min, y_max = min(ys) - margin, max(ys) + margin
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik)
+
+    # Route als Polyline
+    ax.plot(xs, ys, marker='o', linestyle='-', linewidth=2, label="Route")
+
+    # Startpunkt: blaues Quadrat
     if conserved_start_point_for_plausible_plotting:
-        plt.plot(
+        sx, sy = transformer.transform(
             conserved_start_point_for_plausible_plotting[1],
-            conserved_start_point_for_plausible_plotting[0],
-            marker='s',
-            color='blue',
-            markersize=8,
-            label="Start"
+            conserved_start_point_for_plausible_plotting[0]
         )
+        ax.plot(sx, sy, marker='s', color='blue', markersize=8, label="Start")
 
-
+    # Ampeln mit Phase
     if traffic_lights and duration is not None:
         now = duration
         for tl in traffic_lights:
             if not tl.mock_initialized:
-                continue  # Ampel wurde noch nicht konfiguriert
-
+                continue
             lat, lon = tl.get_location()
+            tx, ty = transformer.transform(lon, lat)
             phase, remaining_td = tl.get_phase(now)
-            remaining = int(remaining_td.seconds)
-
+            remaining = int(remaining_td.total_seconds())
             color = 'green' if phase == 'green' else 'red'
-            plt.plot(lon, lat, marker='o', markersize=14, color=color)
-
-            # Restzeit als Text neben der Ampel
-            plt.text(
-                lon + 0.0001, lat + 0.0001,
+            ax.plot(tx, ty, marker='o', markersize=14, color=color)
+            ax.text(
+                tx + 10, ty + 10,
                 f"{remaining}s",
                 fontsize=10,
                 color=color,
                 bbox=dict(facecolor='white', alpha=0.6, edgecolor='none', pad=1.0)
             )
 
-
-    # Aktuelle Position: grün
+    # Aktuelle Position
     if current_pos:
-        plt.plot(current_pos[1], current_pos[0], 'go', label="Aktuelle Position")
-
+        px, py = transformer.transform(current_pos[1], current_pos[0])
+        ax.plot(px, py, 'go', label="Aktuelle Position")
         if v_actual is not None:
-            # Geschwindigkeit als Text neben der Position
-            plt.text(
-                current_pos[1] + 0.0001, current_pos[0] + 0.0001,
+            ax.text(
+                px + 10, py + 10,
                 f"{v_actual:.2f} m/s",
                 fontsize=10,
                 color='green',
                 bbox=dict(facecolor='white', alpha=0.6, edgecolor='none', pad=1.0)
             )
 
-
-    # Ziel: rot
+    # Ziel
     if destination:
-        plt.plot(destination[1], destination[0], 'ro', label="Ziel")
+        dx, dy = transformer.transform(destination[1], destination[0])
+        ax.plot(dx, dy, 'ro', label="Ziel")
 
+    # Duration und Entfernung
     if duration is not None:
-        plt.text(
+        ax.text(
             0.01, 0.01,
-            f"Zeit: {duration}s",
-            transform=plt.gca().transAxes,
+            f"Zeit: {duration.seconds}s",
+            transform=ax.transAxes,
             fontsize=12,
             verticalalignment='bottom',
             bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray')
         )
-
     if distance_to_next_tl is not None:
-        plt.text(
+        ax.text(
             0.99, 0.01,
             f"Entfernung zur nächsten Ampel:\n{distance_to_next_tl:.1f} m",
-            transform=plt.gca().transAxes,
+            transform=ax.transAxes,
             fontsize=11,
             verticalalignment='bottom',
             horizontalalignment='right',
             bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray')
         )
 
-
-    plt.title("Visualisierung der Route")
-    plt.xlabel("Längengrad (x)")
-    plt.ylabel("Breitengrad (y)")
-    plt.grid(True)
-    plt.axis('equal')
-    plt.legend()
+    ax.set_title("Visualisierung der Route")
+    ax.set_xlabel("Web Mercator X")
+    ax.set_ylabel("Web Mercator Y")
+    ax.legend()
     plt.tight_layout()
     plt.show()
-
-# # Beispielaufruf:
-# route = [
-#     (50.93802, 6.925029),
-#     (50.938858, 6.925349),
-#     (50.939669, 6.925645),
-#     (50.939919, 6.925739),
-#     (50.941446, 6.926293),
-#     (50.942107, 6.926531),
-#     (50.942628, 6.926753),
-#     (50.942879, 6.926919),
-#     (50.944136, 6.927853),
-#     (50.944464, 6.928107),
-# ]
-#
-# traffic_lights = [
-#     (50.9396246, 6.9256272),
-#     (50.9425, 6.9267)
-# ]
-#
-# current_position = (50.9395, 6.9256)
-# destination = (50.944464, 6.928107)
-#
-# plot_route(route, current_pos=current_position, destination=destination, traffic_lights=traffic_lights)

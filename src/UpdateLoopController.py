@@ -35,7 +35,7 @@ class UpdateLoopController:
         print(f"Aktuelle Position: {self.mocked_cyclist.get_current_position()}")
         while True:
             old_route = self.update_cycle(self.duration, time_step, old_route)
-            plt.pause(2)
+            plt.pause(0.1)
             time.sleep(time_step.seconds)
             self.duration += timedelta(seconds=1)
 
