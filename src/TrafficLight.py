@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 import datetime
 from datetime import timedelta
 
@@ -49,7 +49,7 @@ class TrafficLight:
 
         return phase_start, phase_start + self.green_duration
 
-    #TODO theoretisch müsste diese func iwann echtzeitphasendaten abrufen aber naja ne
+    #für die Visualisierung. Es wird nur die aktuelle Phase angeschaut ohne auf zukünftige phasen zu gucken
     def get_phase(
             self,
             current_time: timedelta
@@ -69,3 +69,26 @@ class TrafficLight:
             remaining = self.red_duration - time_in_red
 
         return phase, remaining
+
+    # gibt die jeweils noch verbleibenden sekunden bis zu den zehn nächsten grünphasen zurück
+    def get_next_green_starts(
+        self,
+        current_time: timedelta,
+    ) -> List[timedelta]:
+        """
+        Gibt für die kommenden zehn Zyklen die Verzögerung bis zum Grünstart zurück.
+        :param current_time: Aktueller Zeitoffset als timedelta
+        :return: Liste von timedelta bis zum Beginn der nächsten zehn Grünphasen
+        """
+        cycle_duration = self.green_duration + self.red_duration
+        # Zeit innerhalb des Zyklus unter Berücksichtigung des Offsets
+        time_in_cycle = (current_time - self.offset) % cycle_duration
+        # Verzögerung bis zum nächsten Grünstart
+        first_delay = cycle_duration - time_in_cycle
+        starts: List[timedelta] = []
+        for i in range(50):
+            starts.append(first_delay + i * cycle_duration)
+        return starts
+
+
+

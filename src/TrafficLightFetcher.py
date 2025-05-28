@@ -71,7 +71,7 @@ class TrafficLightFetcher:
         :param buffer: Abstand in Metern zur Route
         :return: Liste relevanter TrafficLight-Objekte
         """
-        print('get_relevant_traffic_lights')
+
         relevant = []  # Liste von Tuplen (TrafficLight, segment_index, t)
         if not route:
             return []
@@ -122,9 +122,9 @@ class TrafficLightFetcher:
         # Sortiere nach Segment-Index und t entlang des Segments
         relevant.sort(key=lambda item: (item[1], item[2]))
 
-        for element in relevant:
-            # Debug-Ausgabe für jedes relevante Element
-            print(f"Relevante Ampel: {element[0].get_id()}, Segment: {element[1]}, t: {element[2]}")
+        print('relevante Ampeln:')
+        for i, (light, segment, t_val) in enumerate(relevant):
+            print(f"Ampel Nr. {i}: {light.get_id()}, Segment: {segment}, t: {t_val}")
 
         # Extrahiere nur die TrafficLight-Objekte
         return [item[0] for item in relevant]

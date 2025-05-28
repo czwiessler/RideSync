@@ -6,6 +6,8 @@ from datetime import timedelta
 def plot_route(
         route,
         current_pos=None,
+        v_actual=None,
+        distance_to_next_tl=None,
         destination=None,
         traffic_lights: List[TrafficLight]=None,
         conserved_start_point_for_plausible_plotting=None,
@@ -59,6 +61,17 @@ def plot_route(
     if current_pos:
         plt.plot(current_pos[1], current_pos[0], 'go', label="Aktuelle Position")
 
+        if v_actual is not None:
+            # Geschwindigkeit als Text neben der Position
+            plt.text(
+                current_pos[1] + 0.0001, current_pos[0] + 0.0001,
+                f"{v_actual:.2f} m/s",
+                fontsize=10,
+                color='green',
+                bbox=dict(facecolor='white', alpha=0.6, edgecolor='none', pad=1.0)
+            )
+
+
     # Ziel: rot
     if destination:
         plt.plot(destination[1], destination[0], 'ro', label="Ziel")
@@ -72,6 +85,18 @@ def plot_route(
             verticalalignment='bottom',
             bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray')
         )
+
+    if distance_to_next_tl is not None:
+        plt.text(
+            0.99, 0.01,
+            f"Entfernung zur nächsten Ampel:\n{distance_to_next_tl:.1f} m",
+            transform=plt.gca().transAxes,
+            fontsize=11,
+            verticalalignment='bottom',
+            horizontalalignment='right',
+            bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray')
+        )
+
 
     plt.title("Visualisierung der Route")
     plt.xlabel("Längengrad (x)")

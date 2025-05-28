@@ -32,6 +32,8 @@ def main():
         print("Konnte traffic_light.json nicht laden.", file=sys.stderr)
         sys.exit(1)
 
+
+
     # === Hauptkontrollschleife starten ===
     controller = UpdateLoopController(fetcher)
     controller.start_loop()
