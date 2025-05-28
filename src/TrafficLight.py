@@ -2,10 +2,6 @@ from typing import Tuple, List
 import datetime
 from datetime import timedelta
 
-TimePoint = datetime.datetime
-
-datetime.timedelta
-
 
 class TrafficLight:
     def __init__(self, id: str, lat: float, lon: float) -> None:
@@ -29,32 +25,15 @@ class TrafficLight:
         return f"{self.id}"
 
 
-    #TODO theoretisch müsste diese func iwann echtzeitphasendaten abrufen aber naja ne
-    def get_next_green_phase(
-            self,
-            current_time: timedelta
-    ) -> Tuple[timedelta, timedelta]:
-        """
-        Gibt die nächste Grünphase basierend auf individuellem Zyklus zurück.
-        """
-        cycle_length = self.green_duration + self.red_duration
-        start_time = current_time - self.offset  # theoretischer Zyklusstart
-        time_in_cycle = (current_time - start_time) % cycle_length
-
-        if time_in_cycle < self.green_duration:
-            phase_start = current_time - time_in_cycle
-        else:
-            time_to_next_green = cycle_length - time_in_cycle
-            phase_start = current_time + time_to_next_green
-
-        return phase_start, phase_start + self.green_duration
-
-    #für die Visualisierung. Es wird nur die aktuelle Phase angeschaut ohne auf zukünftige phasen zu gucken
     def get_phase(
             self,
             current_time: timedelta
     ) -> Tuple[str, timedelta.seconds]: #'green' or 'red', phase rest duration
-
+        """
+        Bestimmt die aktuelle Phase der Ampel und die verbleibende Zeit bis zum Phasenwechsel.
+        :param current_time:
+        :returns : Tuple mit Phase ('green' oder 'red') und verbleibender Zeit in der Phase als timedelta
+        """
         cycle_duration = self.green_duration + self.red_duration
         # Zyklusstartzeit so berechnen, dass offset mit eingerechnet wird
         start_time = timedelta(seconds=0) + self.offset
@@ -70,15 +49,14 @@ class TrafficLight:
 
         return phase, remaining
 
-    # gibt die jeweils noch verbleibenden sekunden bis zu den zehn nächsten grünphasen zurück
     def get_next_green_starts(
         self,
         current_time: timedelta,
     ) -> List[timedelta]:
         """
-        Gibt für die kommenden zehn Zyklen die Verzögerung bis zum Grünstart zurück.
-        :param current_time: Aktueller Zeitoffset als timedelta
-        :return: Liste von timedelta bis zum Beginn der nächsten zehn Grünphasen
+        Gibt für die kommenden 50 Zyklen die Zeit in Sekunden bis zum Grünstart zurück.
+        :param current_time:
+        :return: Liste von timedeltas in sekunden bis zum Beginn der nächsten 50 Grünphasen
         """
         cycle_duration = self.green_duration + self.red_duration
         # Zeit innerhalb des Zyklus unter Berücksichtigung des Offsets

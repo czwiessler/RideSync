@@ -6,25 +6,32 @@ import sys
 from DestinationManager import DestinationManager
 from TrafficLightFetcher import TrafficLightFetcher
 from UpdateLoopController import UpdateLoopController
-from src.PositionTracker import PositionTracker
+from MockedCyclist import MockedCyclist
 
 
 def main():
     print("Grüne-Welle-Assistent startet...")
 
+    # === Startposition setzen ===
+    try:
+        user_input = "u"#input("Bitte Startkoordinaten eingeben (Latitude Longitude): ")
+        lat_str, lon_str = user_input.strip().split()
+        lat_start, lon_start = float(lat_str), float(lon_str)
+    except (ValueError, IndexError):
+        print("Ungültige Eingabe. Standardstartposition wird verwendet.", file=sys.stderr)
+        lat_start, lon_start = 50.948172, 6.932064
+
     # === Ziel setzen ===
     try:
         user_input = "u"#input("Bitte Zielkoordinaten eingeben (Latitude Longitude): ")
         lat_str, lon_str = user_input.strip().split()
-        lat, lon = float(lat_str), float(lon_str)
+        lat_end, lon_end = float(lat_str), float(lon_str)
     except (ValueError, IndexError):
         print("Ungültige Eingabe. Standardziel wird verwendet.", file=sys.stderr)
-        lat, lon = 50.939174, 6.925188 #50.944464, 6.928108
+        lat_end, lon_end = 50.939174, 6.925188 #50.944464, 6.928108
 
-    DestinationManager.set_destination((lat, lon))
-    print(f"Ziel gesetzt: {lat}, {lon}")
-
-    print(f"Aktuelle Position: {PositionTracker.get_current_position()}") #TODO fertig schreiben)
+    DestinationManager.set_destination((lat_end, lon_end))
+    print(f"Ziel gesetzt: {lat_end}, {lon_end}")
 
     # TrafficLightFetcher vorbereiten
     fetcher = TrafficLightFetcher()
@@ -32,10 +39,10 @@ def main():
         print("Konnte traffic_light.json nicht laden.", file=sys.stderr)
         sys.exit(1)
 
-
+    mocked_cyclist = MockedCyclist(start_position=(lat_start, lon_start))
 
     # === Hauptkontrollschleife starten ===
-    controller = UpdateLoopController(fetcher)
+    controller = UpdateLoopController(fetcher, mocked_cyclist)
     controller.start_loop()
 
 

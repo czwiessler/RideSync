@@ -1,9 +1,8 @@
 #UpdateLoopController.py
 
-import sys
 import time
 from typing import List, Tuple, Optional
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import matplotlib.pyplot as plt
 from route_visualizer import plot_route
@@ -13,15 +12,15 @@ from DestinationManager import DestinationManager
 from RoutePlanner import compute_route
 from TrafficLightFetcher import TrafficLightFetcher
 from SpeedAdvisor import SpeedAdvisor
-from TrafficLight import TrafficLight #, Phase
+from TrafficLight import TrafficLight
 from TrafficLightSelector import TrafficLightSelector
 from MockedCyclist import MockedCyclist
 from utils import haversine_along_route
 
 
 class UpdateLoopController:
-    def __init__(self, tl_fetcher: TrafficLightFetcher) -> None:
-        self.mocked_cyclist = MockedCyclist(start_position=(50.948172, 6.932064))
+    def __init__(self, tl_fetcher: TrafficLightFetcher, mocked_cyclist:MockedCyclist) -> None:
+        self.mocked_cyclist = mocked_cyclist
         self.tl_fetcher = tl_fetcher
         self.tl_selector = TrafficLightSelector()
         self.last_next_light: Optional[TrafficLight] = None
@@ -33,14 +32,16 @@ class UpdateLoopController:
     def start_loop(self) -> None:
         old_route: List[Tuple[float, float]] = []
         time_step = timedelta(seconds=1)
+        print(f"Aktuelle Position: {self.mocked_cyclist.get_current_position()}")
         while True:
             old_route = self.update_cycle(self.duration, time_step, old_route)
-            plt.pause(0.1)
+            plt.pause(2)
             time.sleep(time_step.seconds)
             self.duration += timedelta(seconds=1)
 
     def update_cycle(self, duration: timedelta, time_step: timedelta, old_route):
-        current_position = (50.948172, 6.932064)
+        #TODO später entfernen: mock-zeile zum start der Testläufe
+        current_position = self.mocked_cyclist.get_current_position()
 
         #nur damit die plot achsen sich nicht immer ändern
         conserved_start_point_for_plausible_plotting = current_position
@@ -113,20 +114,23 @@ class UpdateLoopController:
         )
         print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt}")
 
+        #DEBUG block start#####################################################################################
         # Berechne die Geschwindigkeitsdifferenz und übersetze sie in eine Anweisung
         def calculate_speed_diff(v_opt: float, v_actual: float) -> float:
             return v_opt - v_actual
         def translate_to_instruction(v_diff: float) -> str:
-            if v_diff > 0:
+            if v_diff > 0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
                 return f"Beschleunige um {v_diff:.2f} m/s, um die Ampel zu erreichen."
-            elif v_diff < 0:
+            elif v_diff < -0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
                 return f"Reduziere die Geschwindigkeit um {-v_diff:.2f} m/s, um die Ampel nicht zu überfahren."
             else:
                 return "Halte deine aktuelle Geschwindigkeit bei."
 
-        instruction = translate_to_instruction(calculate_speed_diff(v_opt, v_actual))
+        print(translate_to_instruction(calculate_speed_diff(v_opt, v_actual)))
+        # DEBUG block ende#####################################################################################
 
-        self.mocked_cyclist.choose_velocity(v_opt)
+        #TODO mock später entfernen, da Fahrrad tatsächlich Geschwindigkeit ändert
+        self.mocked_cyclist.change_velocity_mock(v_opt)
 
         self.ax.cla()
 

@@ -10,19 +10,6 @@ from utils import haversine
 
 class PositionTracker:
 
-    # TODO loswerden, die func wird nur noch von main benutzt
-    @staticmethod
-    def get_current_position() -> Tuple[float, float]:
-        """
-        Liefert die aktuelle GPS-Position.
-        Aktuell im Mock-Modus: Beispielkoordinaten für den Kölner Dom.
-
-        :return: Tuple[float, float] mit (latitude, longitude)
-        """
-        latitude: float = 50.948172
-        longitude: float = 6.932064
-        return (latitude, longitude)
-
     def get_current_position_mock(
             self,
             mocked_cyclist,
