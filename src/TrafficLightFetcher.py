@@ -6,7 +6,7 @@ from typing import List, Tuple
 from datetime import datetime, timedelta
 import json
 
-from TrafficLight import TrafficLight, Phase
+from TrafficLight import TrafficLight#, Phase
 
 
 class TrafficLightFetcher:
@@ -43,34 +43,25 @@ class TrafficLightFetcher:
         except (OSError, json.JSONDecodeError):
             return False
 
-        now = datetime.now()
-        # Erzeuge simulierte Grünphasen für jede Ampel
+        #now = datetime.now()
+        # Erstelle die Ampel Objekte
         for feature in data.get('features', []):
             geom = feature.get('geometry', {})
             coords = geom.get('coordinates', [])
             if len(coords) < 2:
                 continue
             lon, lat = coords[0], coords[1]
+            id_ = feature.get("id", "unknown")
 
-            # TODO: Hier sollten echte Grünphasen geladen werden, z.B. aus einem Attribut
-            # Generiere mehrere Phasen für einen 130-Sekunden-Zyklus (10s grün, 120s rot)
-            cycle_duration = timedelta(seconds=5)  # Gesamtlänge eines Zyklus
-            green_duration = timedelta(seconds=5)   # Länge der Grünphase
-            num_cycles = 10  # Anzahl der vorgenerierten Zyklen
-            
-            phases: List[Phase] = []
-            for i in range(num_cycles):
-                cycle_start = now + (cycle_duration * i)
-                phases.append((cycle_start, cycle_start + green_duration))
-            ##########
-
-            tl = TrafficLight(float(lat), float(lon), phases)
+            tl = TrafficLight(id_, float(lat), float(lon)) #, phases
             self._all_traffic_lights.append(tl)
 
         return True
 
     def get_relevant_traffic_lights(
-        self, route: List[Tuple[float, float]], buffer: float = 2.0
+            self,
+            route: List[Tuple[float, float]],
+            buffer: float = 2.0
     ) -> List[TrafficLight]:
         """
         Gibt alle Ampeln zurück, die maximal `buffer` Meter links und rechts entlang
@@ -80,6 +71,7 @@ class TrafficLightFetcher:
         :param buffer: Abstand in Metern zur Route
         :return: Liste relevanter TrafficLight-Objekte
         """
+
         relevant = []  # Liste von Tuplen (TrafficLight, segment_index, t)
         if not route:
             return []
@@ -129,6 +121,10 @@ class TrafficLightFetcher:
 
         # Sortiere nach Segment-Index und t entlang des Segments
         relevant.sort(key=lambda item: (item[1], item[2]))
+
+        print('relevante Ampeln:')
+        for i, (light, segment, t_val) in enumerate(relevant):
+            print(f"Ampel Nr. {i}: {light.get_id()}, Segment: {segment}, t: {t_val}")
 
         # Extrahiere nur die TrafficLight-Objekte
         return [item[0] for item in relevant]

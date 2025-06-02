@@ -1,158 +1,159 @@
-"""
-Steuert die Hauptschleife: Position erfassen, Route planen,
-Ampeln filtern, Geschwindigkeit berechnen und Events loggen.
-"""
-import sys
+#UpdateLoopController.py
+
 import time
 from typing import List, Tuple, Optional
-from datetime import datetime
+from datetime import timedelta
+
+import matplotlib.pyplot as plt
+from route_visualizer import plot_route
 
 from PositionTracker import PositionTracker
 from DestinationManager import DestinationManager
 from RoutePlanner import compute_route
 from TrafficLightFetcher import TrafficLightFetcher
-from SpeedAdvisor import (
-    get_current_speed,
-    calculate_speed_diff,
-    translate_to_instruction,
-    choose_best_phase_and_speed,
-)
-from TrafficLight import TrafficLight, Phase
+from SpeedAdvisor import SpeedAdvisor
+from TrafficLight import TrafficLight
 from TrafficLightSelector import TrafficLightSelector
+from MockedCyclist import MockedCyclist
+from utils import haversine_along_route
 
 
 class UpdateLoopController:
-    def __init__(self, fetcher: TrafficLightFetcher) -> None:
-        """
-        Initialisiert den Controller mit einem TrafficLightFetcher.
-        :param fetcher: Instanz von TrafficLightFetcher mit geladenen Ampeln
-        """
-        self.fetcher = fetcher
-        # Selector für nächste Ampel
-        self.selector = TrafficLightSelector()
-        # Für Logging der Ampelpassage
+    def __init__(self, tl_fetcher: TrafficLightFetcher, mocked_cyclist:MockedCyclist) -> None:
+        self.mocked_cyclist = mocked_cyclist
+        self.tl_fetcher = tl_fetcher
+        self.tl_selector = TrafficLightSelector()
         self.last_next_light: Optional[TrafficLight] = None
 
+        plt.ion()
+        self.fig, self.ax = plt.subplots(figsize=(6, 8))
+        self.duration = timedelta(seconds=0)
+
     def start_loop(self) -> None:
-        """
-        Startet die Endlosschleife, führt jede Sekunde ein Update durch.
-        """
-        duration = 0 ## delete if mock is removed
-        old_route: List[Tuple[float, float]] = [] ## delete if mock is removed
+        old_route: List[Tuple[float, float]] = []
+        time_step = timedelta(seconds=1)
+        print(f"Aktuelle Position: {self.mocked_cyclist.get_current_position()}")
         while True:
-            old_route = self.update_cycle(duration, old_route) ## delete duration and old_route if mock is removed
-            time.sleep(1)
-            duration += 1
+            old_route = self.update_cycle(self.duration, time_step, old_route)
+            plt.pause(0.1)
+            time.sleep(time_step.seconds)
+            self.duration += timedelta(seconds=1)
 
-    def update_cycle(self, duration, old_route): ## delete duration and old_route if mock is removed
-        """
-        Ein Zyklus: Position, Route, Ampeln, Geschwindigkeit, Anweisung,
-        plus Logging, wenn eine Ampel passiert wurde.
-        """
-        # 1. Aktuelle Position holen
-        current_position: Tuple[float, float] = PositionTracker.get_current_position()
-        current_position = (50.938017, 6.925047)
+    def update_cycle(self, duration: timedelta, time_step: timedelta, old_route):
+        #TODO später entfernen: mock-zeile zum start der Testläufe
+        current_position = self.mocked_cyclist.get_current_position()
 
-        ###### MOCK START ## delete if mock is removed
-        # current position mocker, drive to destination
-        if duration == 0:
+        #nur damit die plot achsen sich nicht immer ändern
+        conserved_start_point_for_plausible_plotting = current_position
+
+
+        if duration.seconds == 0:
             destination: Tuple[float, float] = DestinationManager.get_destination()
             old_route: List[Tuple[float, float]] = compute_route(current_position, destination)
-            self.selector.set_route(old_route)
+            self.tl_selector.set_route(old_route)
+
         tracker = PositionTracker()
-        current_position: Tuple[float, float] = tracker.get_current_position_mock(old_route, duration)
-        #print(current_position)
-        ##### MOCK ENDE
+        current_position = tracker.get_current_position_mock(self.mocked_cyclist, old_route, time_elapsed=time_step)
 
-
-        # 2. Ziel abrufen
-        destination: Tuple[float, float] = DestinationManager.get_destination()
-
-        # 3. Route berechnen
-        route: List[Tuple[float, float]] = compute_route(current_position, destination)
-
-        ###### MOCK START ## delete if mock is removed
+        destination = DestinationManager.get_destination()
+        route = compute_route(current_position, destination)
         old_route = route
-        ###### MOCK ENDE
+        self.tl_selector.set_route(route)
 
-        # 4. Route im Selector setzen
-        self.selector.set_route(route)
-
-        # 5. Relevante Ampeln filtern
-        traffic_lights: List[TrafficLight] = self.fetcher.get_relevant_traffic_lights(route)
+        traffic_lights: List[TrafficLight] = self.tl_fetcher.get_relevant_traffic_lights(route)
         if not traffic_lights:
-            # letzte Ampel loggen
-            if self.last_next_light is not None:
-                light = self.last_next_light
-                pass_time = datetime.now()
-                phase = light.get_next_green_phase(pass_time)
-                loc = light.get_location()
-                print(
-                    "\n=== 🚦 Ampel passiert 🚦 ===\n"
-                    f"Standort: {loc}\n"
-                    f"Tatsächliche nächste Grünphase: {phase[0].strftime('%d.%m.%Y %H:%M:%S')} bis {phase[1].strftime('%d.%m.%Y %H:%M:%S')}\n"
-                    f"Vorbeifahrtszeit: {pass_time.strftime('%d.%m.%Y %H:%M:%S')}\n"
-                    "============================\n"
-                )
-                self.last_next_light = None
-            print("Keine relevanten Ampeln auf der Route gefunden.")
+            self.ax.cla()
+            self.ax.set_title("Keine relevanten Ampeln gefunden")
             return old_route
 
-        # 6. Nächste Ampel auswählen
-        next_light: Optional[TrafficLight] = self.selector.get_next_traffic_light(
-            current_position,
-            traffic_lights
-        )
+        next_light = self.tl_selector.get_next_traffic_light(current_position, traffic_lights)
         if next_light is None:
-            print("Keine nächste Ampel ermittelt.")
-            return old_route ## delete if mock is removed
+            self.ax.cla()
+            self.ax.set_title("Keine nächste Ampel ermittelt")
+            return old_route
 
-        # 7. Prüfen, ob die vorherige Ampel passiert wurde
-        if self.last_next_light and next_light.get_location() != self.last_next_light.get_location():
-            light = self.last_next_light
-            pass_time = datetime.now()
-            phase = light.get_next_green_phase(pass_time)
-            loc = light.get_location()
-            print(
-                "\n=== 🚦 Ampel passiert 🚦 ===\n"
-                f"Standort: {loc}\n"
-                f"Tatsächliche nächste Grünphase: {phase[0].strftime('%d.%m.%Y %H:%M:%S')} bis {phase[1].strftime('%d.%m.%Y %H:%M:%S')}\n"
-                f"Vorbeifahrtszeit: {pass_time.strftime('%d.%m.%Y %H:%M:%S')}\n"
-                "============================\n"
-            )
+        if not next_light.mock_initialized:
+            print(f"\nNeue Ampel erkannt: {next_light.get_id()}")
 
-        # 7. Nächste Grünphase abrufen (für Logging, falls später benötigt)
-        now = datetime.now()
-        #green_window: Phase = next_light.get_next_green_phase(now)
-        # print the next green phase
-        #print(f"Nächste Grünphase: {green_window[0]} bis {green_window[1]}")
+            #########################
+            # TODO unkommentieren, wenn phasen wieder in der eingabe gemockt werden sollen. (dann letzte zeile weg)
+            # try:
+            #     green = int(input("Grünphase in Sekunden (Default 10): ") or "10")
+            #     red = int(input("Rotphase in Sekunden (Default 40): ") or "40")
+            #     offset = int(input("Offset in Sekunden (Default 0): ") or "0")
+            # except ValueError:
+            #     print("Ungültige Eingabe, verwende Defaults.")
+            #     green, red, offset = 10, 40, 0
+            green, red, offset = 10, 20, 0
+            ##########################
 
-        # 8. Optimale Phase und Geschwindigkeit bestimmen
-        phase, v_opt = choose_best_phase_and_speed(
-            current_position,
-            next_light,
-            next_light.green_phases
+            next_light.green_duration = timedelta(seconds=green)
+            next_light.red_duration = timedelta(seconds=red)
+            next_light.offset = timedelta(seconds=offset)
+            next_light.mock_initialized = True
+
+        distance_to_next_tl = haversine_along_route(
+            start_point=current_position,
+            end_point=next_light.get_location(),
+            route=route
         )
-        # Gewählte Phase für Geschwindigkeit
-        chosen_phase = phase
 
-        # 9. Aktuelle Geschwindigkeit messen
-        v_actual: float = get_current_speed()
 
-        # 10. Differenz berechnen
-        v_diff: float = calculate_speed_diff(v_opt, v_actual)
+        v_actual = self.mocked_cyclist.get_current_speed()
+        print(f"aktuelle Geschwindigkeit: {v_actual}")
 
-        # 11. In Anweisung übersetzen und ausgeben
-        instruction: str = translate_to_instruction(v_diff)
-        print(
-             #f"Gewählte Phase: {phase}, "
-              f"Nächste Ampel: {next_light.get_location()}, "
-              f"Gewählte Grünphase: {chosen_phase[0].strftime('%H:%M:%S')}–{chosen_phase[1].strftime('%H:%M:%S')}, "
-              #f"Aktuelle Geschwindigkeit: {v_actual:.2f} m/s, "
-              f"Zielspeed: {v_opt:.2f} m/s → {instruction}, "
-              #f"Aktuelle Position: {current_position}, "
-              )
+        advisor = SpeedAdvisor()
+        delay, v_opt = advisor.choose_best_phase_and_speed(
+            current_position=current_position,
+            next_light=next_light,
+            green_starts=next_light.get_next_green_starts(duration),
+            now=duration,
+            preferred_speed=self.mocked_cyclist.preferred_speed,
+            min_speed=self.mocked_cyclist.min_speed,
+            max_speed=self.mocked_cyclist.max_speed
+        )
+        print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt}")
 
-        # 12. Für die nächste Iteration merken
+        #DEBUG block start#####################################################################################
+        # Berechne die Geschwindigkeitsdifferenz und übersetze sie in eine Anweisung
+        def calculate_speed_diff(v_opt: float, v_actual: float) -> float:
+            return v_opt - v_actual
+        def translate_to_instruction(v_diff: float) -> str:
+            if v_diff > 0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
+                return f"Beschleunige um {v_diff:.2f} m/s, um die Ampel zu erreichen."
+            elif v_diff < -0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
+                return f"Reduziere die Geschwindigkeit um {-v_diff:.2f} m/s, um die Ampel nicht zu überfahren."
+            else:
+                return "Halte deine aktuelle Geschwindigkeit bei."
+
+        print(translate_to_instruction(calculate_speed_diff(v_opt, v_actual)))
+        # DEBUG block ende#####################################################################################
+
+        #TODO mock später entfernen, da Fahrrad tatsächlich Geschwindigkeit ändert
+        self.mocked_cyclist.change_velocity_mock(v_opt)
+
+        self.ax.cla()
+
+        plot_route(
+            route=route,
+            current_pos=current_position,
+            v_actual=v_actual,
+            distance_to_next_tl=distance_to_next_tl,
+            destination=destination,
+            traffic_lights=traffic_lights,
+            conserved_start_point_for_plausible_plotting=conserved_start_point_for_plausible_plotting,
+            duration=duration,
+        )
+
+        # self.ax.text(
+        #     0.99, 0.01,  # unten rechts
+        #     f"{instruction}\nZielspeed: {v_opt:.2f} m/s",
+        #     transform=self.ax.transAxes,
+        #     fontsize=12,
+        #     verticalalignment='bottom',
+        #     horizontalalignment='right',
+        #     bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray')
+        # )
+
         self.last_next_light = next_light
-        return old_route ## delete if mock is removed
+        return old_route

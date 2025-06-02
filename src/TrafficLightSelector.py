@@ -1,6 +1,7 @@
 from typing import Tuple, List, Optional
 import math
 from TrafficLight import TrafficLight
+from utils import haversine
 
 class TrafficLightSelector:
     """
@@ -18,12 +19,12 @@ class TrafficLightSelector:
         self.route = route
         self._compute_cumulative_distances()
 
-    def _haversine(self, a: Tuple[float, float], b: Tuple[float, float]) -> float:
-        """
-        Berechnet die euklidische Distanz zwischen zwei Punkten.
-        Bei echten GPS-Daten kann hier später auf einen geodätischen Ansatz umgestellt werden.
-        """
-        return math.hypot(a[0] - b[0], a[1] - b[1])
+    # def _haversine(self, a: Tuple[float, float], b: Tuple[float, float]) -> float:
+    #     """
+    #     Berechnet die euklidische Distanz zwischen zwei Punkten.
+    #     Bei echten GPS-Daten kann hier später auf einen geodätischen Ansatz umgestellt werden.
+    #     """
+    #     return math.hypot(a[0] - b[0], a[1] - b[1])
 
     def _compute_cumulative_distances(self) -> None:
         """
@@ -31,7 +32,7 @@ class TrafficLightSelector:
         """
         self._cum_distances = [0.0]
         for a, b in zip(self.route, self.route[1:]):
-            dist = self._haversine(a, b)
+            dist = haversine(a, b)
             self._cum_distances.append(self._cum_distances[-1] + dist)
 
     def _distance_along_route(self, point: Tuple[float, float]) -> float:
@@ -53,7 +54,7 @@ class TrafficLightSelector:
             t_clamped = max(0.0, min(1.0, t))
             proj = (a[0] + t_clamped * dx, a[1] + t_clamped * dy)
 
-            d = self._haversine(point, proj)
+            d = haversine(point, proj)
             if d < best_dist:
                 best_dist = d
                 best_along = self._cum_distances[i] + math.sqrt(seg_len2) * t_clamped
