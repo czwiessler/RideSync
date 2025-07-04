@@ -6,7 +6,8 @@ import sys
 from DestinationManager import DestinationManager
 from TrafficLightFetcher import TrafficLightFetcher
 from UpdateLoopController import UpdateLoopController
-from MockedCyclist import MockedCyclist
+from Cyclist import Cyclist
+from Speedometer import Speedomter
 
 
 def main():
@@ -39,10 +40,11 @@ def main():
         print("Konnte traffic_light.json nicht laden.", file=sys.stderr)
         sys.exit(1)
 
-    mocked_cyclist = MockedCyclist(start_position=(lat_start, lon_start))
+    speedometer = Speedomter(2.1)
+    cyclist = Cyclist(speedometer)
 
     # === Hauptkontrollschleife starten ===
-    controller = UpdateLoopController(fetcher, mocked_cyclist)
+    controller = UpdateLoopController(fetcher, cyclist)
     controller.start_loop()
 
 

@@ -4,9 +4,6 @@ import time
 from typing import List, Tuple, Optional
 from datetime import timedelta
 
-import matplotlib.pyplot as plt
-from route_visualizer import plot_route
-
 from PositionTracker import PositionTracker
 from DestinationManager import DestinationManager
 from RoutePlanner import compute_route
@@ -14,34 +11,31 @@ from TrafficLightFetcher import TrafficLightFetcher
 from SpeedAdvisor import SpeedAdvisor
 from TrafficLight import TrafficLight
 from TrafficLightSelector import TrafficLightSelector
-from MockedCyclist import MockedCyclist
+from Cyclist import Cyclist
 from utils import haversine_along_route
 
 
 class UpdateLoopController:
-    def __init__(self, tl_fetcher: TrafficLightFetcher, mocked_cyclist:MockedCyclist) -> None:
-        self.mocked_cyclist = mocked_cyclist
+    def __init__(self, tl_fetcher: TrafficLightFetcher, cyclist:Cyclist) -> None:
+        self.cyclist = cyclist
         self.tl_fetcher = tl_fetcher
         self.tl_selector = TrafficLightSelector()
         self.last_next_light: Optional[TrafficLight] = None
 
-        plt.ion()
-        self.fig, self.ax = plt.subplots(figsize=(6, 8))
         self.duration = timedelta(seconds=0)
 
     def start_loop(self) -> None:
         old_route: List[Tuple[float, float]] = []
         time_step = timedelta(seconds=1)
-        print(f"Aktuelle Position: {self.mocked_cyclist.get_current_position()}")
+        print(f"Aktuelle Position: {self.cyclist.get_current_position()}")
         while True:
             old_route = self.update_cycle(self.duration, time_step, old_route)
-            plt.pause(0.1)
             time.sleep(time_step.seconds)
             self.duration += timedelta(seconds=1)
 
     def update_cycle(self, duration: timedelta, time_step: timedelta, old_route):
         #TODO später entfernen: mock-zeile zum start der Testläufe
-        current_position = self.mocked_cyclist.get_current_position()
+        current_position = self.cyclist.get_current_position()
 
         #nur damit die plot achsen sich nicht immer ändern
         conserved_start_point_for_plausible_plotting = current_position
@@ -53,7 +47,7 @@ class UpdateLoopController:
             self.tl_selector.set_route(old_route)
 
         tracker = PositionTracker()
-        current_position = tracker.get_current_position_mock(self.mocked_cyclist, old_route, time_elapsed=time_step)
+        current_position = tracker.get_current_position(self.cyclist, old_route, time_elapsed=time_step)
 
         destination = DestinationManager.get_destination()
         route = compute_route(current_position, destination)
@@ -62,14 +56,10 @@ class UpdateLoopController:
 
         traffic_lights: List[TrafficLight] = self.tl_fetcher.get_relevant_traffic_lights(route)
         if not traffic_lights:
-            self.ax.cla()
-            self.ax.set_title("Keine relevanten Ampeln gefunden")
             return old_route
 
         next_light = self.tl_selector.get_next_traffic_light(current_position, traffic_lights)
         if next_light is None:
-            self.ax.cla()
-            self.ax.set_title("Keine nächste Ampel ermittelt")
             return old_route
 
         if not next_light.mock_initialized:
@@ -99,7 +89,7 @@ class UpdateLoopController:
         )
 
 
-        v_actual = self.mocked_cyclist.get_current_speed()
+        v_actual = self.cyclist.get_current_speed()
         print(f"aktuelle Geschwindigkeit: {v_actual}")
 
         advisor = SpeedAdvisor()
@@ -108,9 +98,9 @@ class UpdateLoopController:
             next_light=next_light,
             green_starts=next_light.get_next_green_starts(duration),
             now=duration,
-            preferred_speed=self.mocked_cyclist.preferred_speed,
-            min_speed=self.mocked_cyclist.min_speed,
-            max_speed=self.mocked_cyclist.max_speed
+            preferred_speed=self.cyclist.preferred_speed,
+            min_speed=self.cyclist.min_speed,
+            max_speed=self.cyclist.max_speed
         )
         print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt}")
 
@@ -128,22 +118,18 @@ class UpdateLoopController:
 
         print(translate_to_instruction(calculate_speed_diff(v_opt, v_actual)))
         # DEBUG block ende#####################################################################################
+        
 
-        #TODO mock später entfernen, da Fahrrad tatsächlich Geschwindigkeit ändert
-        self.mocked_cyclist.change_velocity_mock(v_opt)
-
-        self.ax.cla()
-
-        plot_route(
-            route=route,
-            current_pos=current_position,
-            v_actual=v_actual,
-            distance_to_next_tl=distance_to_next_tl,
-            destination=destination,
-            traffic_lights=traffic_lights,
-            conserved_start_point_for_plausible_plotting=conserved_start_point_for_plausible_plotting,
-            duration=duration,
-        )
+        # plot_route(
+        #     route=route,
+        #     current_pos=current_position,
+        #     v_actual=v_actual,
+        #     distance_to_next_tl=distance_to_next_tl,
+        #     destination=destination,
+        #     traffic_lights=traffic_lights,
+        #     conserved_start_point_for_plausible_plotting=conserved_start_point_for_plausible_plotting,
+        #     duration=duration,
+        # )
 
         # self.ax.text(
         #     0.99, 0.01,  # unten rechts

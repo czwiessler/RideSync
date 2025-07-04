@@ -1,6 +1,13 @@
 # RideSync
 
+## Development
 
+Linux
+1. python -m  venv venv (Initial for device)
+2. source venv/bin/activate
+3. pip install -r requirements.txt
+
+## Configuration for Pi
 Connect PI to GPS as following (1-40 | 1 is at the sd slot):
 
            +---------Pi----------+--GPS---+
@@ -24,4 +31,4 @@ Connect PI to GPS as following (1-40 | 1 is at the sd slot):
  GPIO 19   | 35  36  |  GPIO 16  |
  GPIO 26   | 37  38  |  GPIO 20  |
      GND   | 39  40  |  GPIO 21  |
-           +---------------------+
+           +---------------------+--------+

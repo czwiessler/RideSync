@@ -1,0 +1,3 @@
+requests
+gpsd-py3
+rpi-lgpio

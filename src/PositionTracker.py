@@ -3,16 +3,16 @@ import math
 
 from datetime import timedelta
 
-from MockedCyclist import MockedCyclist
+from Cyclist import Cyclist
 from utils import haversine
 
 
 
 class PositionTracker:
 
-    def get_current_position_mock(
+    def get_current_position(
             self,
-            mocked_cyclist,
+            cyclist,
             route: List[Tuple[float, float]],
             time_elapsed: timedelta  # elapsed time as timedelta
     ) -> Tuple[float, float]:
@@ -32,7 +32,7 @@ class PositionTracker:
 
         # Geschwindigkeit in m/s vom mockedcyclist holen
 
-        speed = mocked_cyclist.get_current_speed()
+        speed = cyclist.get_current_speed()
 
         # Gesamtdistanz basierend auf aktueller Geschwindigkeit
         total_distance = time_elapsed.seconds * speed
