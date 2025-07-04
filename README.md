@@ -10,6 +10,7 @@ Linux
 ## Configuration for Pi
 Connect PI to GPS as following (1-40 | 1 is at the sd slot):
 
+```
            +---------Pi----------+--GPS---+
      3.3V  |  1   2  |  5V       |  5V    | 
      SDA   |  3   4  |  5V       |
@@ -32,3 +33,4 @@ Connect PI to GPS as following (1-40 | 1 is at the sd slot):
  GPIO 26   | 37  38  |  GPIO 20  |
      GND   | 39  40  |  GPIO 21  |
            +---------------------+--------+
+```
