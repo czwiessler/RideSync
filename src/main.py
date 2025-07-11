@@ -7,7 +7,7 @@ from DestinationManager import DestinationManager
 from TrafficLightFetcher import TrafficLightFetcher
 from UpdateLoopController import UpdateLoopController
 from Cyclist import Cyclist
-from Speedometer import Speedomter
+from Speedometer import Speedometer
 
 
 def main():
@@ -40,7 +40,7 @@ def main():
         print("Konnte traffic_light.json nicht laden.", file=sys.stderr)
         sys.exit(1)
 
-    speedometer = Speedomter(2.1)
+    speedometer = Speedometer(2.1)
     cyclist = Cyclist(speedometer)
 
     # === Hauptkontrollschleife starten ===

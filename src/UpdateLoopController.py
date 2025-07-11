@@ -21,7 +21,7 @@ class UpdateLoopController:
         self.tl_fetcher = tl_fetcher
         self.tl_selector = TrafficLightSelector()
         self.last_next_light: Optional[TrafficLight] = None
-
+        self.updateTrigger = 30
         self.duration = timedelta(seconds=0)
 
     def start_loop(self) -> None:
@@ -50,6 +50,10 @@ class UpdateLoopController:
         current_position = tracker.get_current_position(self.cyclist, old_route, time_elapsed=time_step)
 
         destination = DestinationManager.get_destination()
+        if(self.updateTrigger  == 30):
+            route = compute_route(current_position, destination)
+            self.updateTrigger  = 0
+        self.updateTrigger  = self.updateTrigger  + 1
         route = compute_route(current_position, destination)
         old_route = route
         self.tl_selector.set_route(route)
@@ -102,6 +106,7 @@ class UpdateLoopController:
             min_speed=self.cyclist.min_speed,
             max_speed=self.cyclist.max_speed
         )
+        self.cyclist.set_advicde_speed(v_opt)
         print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt}")
 
         #DEBUG block start#####################################################################################
