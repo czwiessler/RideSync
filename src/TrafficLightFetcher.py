@@ -5,6 +5,7 @@ Lädt Ampeldaten aus einer GeoJSON-Datei und liefert relevante Ampeln entlang ei
 from typing import List, Tuple
 #from datetime import datetime #nur zum messen
 import json
+from datetime import timedelta
 
 from TrafficLight import TrafficLight#, Phase
 
@@ -43,6 +44,15 @@ class TrafficLightFetcher:
         except (OSError, json.JSONDecodeError):
             return False
 
+        #gemessene werte für strecke innere kanalstr, erste ampel venloer bis letzte ampel aachener
+        mock_configs = {
+            "4279001084": (60, 50, 0), #venloer
+            "2107720091": (55, 55, 17), #vogelsanger
+            "8546960460": (90, 20, 32), #hollar
+            "2603639844": (40, 70, 60), #weinsberg
+            "750549269": (55, 55, 65), #aachener
+        }
+
         # Erstelle die Ampel Objekte
         for feature in data.get('features', []):
             geom = feature.get('geometry', {})
@@ -52,7 +62,15 @@ class TrafficLightFetcher:
             lon, lat = coords[0], coords[1]
             id_ = feature.get("id", "unknown")
 
-            tl = TrafficLight(id_, float(lat), float(lon)) #, phases
+            tl = TrafficLight(id_, float(lat), float(lon))
+
+            if id_ in mock_configs:
+                grn, red, off = mock_configs[id_]
+                tl.green_duration = timedelta(seconds=grn)
+                tl.red_duration = timedelta(seconds=red)
+                tl.offset = timedelta(seconds=off)
+                tl.mock_initialized = True
+
             self._all_traffic_lights.append(tl)
 
         return True

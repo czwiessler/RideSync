@@ -1,0 +1,84 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2025-05-22T13:36:26Z",
+  "features": [
+
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/750549269",
+        "highway": "traffic_signals"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.9245517,
+          50.9368909
+        ]
+      },
+      "id": "node/750549269"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/8546960460",
+        "highway": "traffic_signals"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.9246951,
+          50.9377961
+        ]
+      },
+      "id": "node/8546960460"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/4279001084",
+        "highway": "traffic_signals"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.9284735,
+          50.9451972
+        ]
+      },
+      "id": "node/4279001084"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/2107720091",
+        "highway": "traffic_signals"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.9267053,
+          50.9428731
+        ]
+      },
+      "id": "node/2107720091"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/2603639844",
+        "highway": "traffic_signals"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.925508,
+          50.9399589
+        ]
+      },
+      "id": "node/2603639844"
+    }
+  ]
+}
