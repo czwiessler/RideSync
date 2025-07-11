@@ -36,8 +36,8 @@ def main():
 
     # TrafficLightFetcher vorbereiten
     fetcher = TrafficLightFetcher()
-    if not fetcher.load_from_json("src/traffic_light.json"):
-        print("Konnte traffic_light.json nicht laden.", file=sys.stderr)
+    if not fetcher.load_from_json("src/traffic_lights_venloer_bis_aachener.json"):
+        print("Konnte traffic_lights_venloer_bis_aachener.json nicht laden.", file=sys.stderr)
         sys.exit(1)
 
     speedometer = Speedometer(2.1)
