@@ -46,11 +46,11 @@ class TrafficLightFetcher:
 
         #gemessene werte für strecke innere kanalstr, erste ampel venloer bis letzte ampel aachener
         mock_configs = {
-            "4279001084": (60, 50, 0), #venloer
-            "2107720091": (55, 55, 17), #vogelsanger
-            "8546960460": (90, 20, 32), #hollar
-            "2603639844": (40, 70, 60), #weinsberg
-            "750549269": (55, 55, 65), #aachener
+            "node/4279001084": (60, 50, 0), #venloer
+            "node/2107720091": (55, 55, 17), #vogelsanger
+            "node/8546960460": (90, 20, 32), #hollar
+            "node/2603639844": (40, 70, 60), #weinsberg
+            "node/750549269": (55, 55, 65), #aachener
         }
 
         # Erstelle die Ampel Objekte
