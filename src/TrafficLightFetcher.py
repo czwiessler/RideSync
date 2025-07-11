@@ -3,7 +3,7 @@
 Lädt Ampeldaten aus einer GeoJSON-Datei und liefert relevante Ampeln entlang einer Route.
 """
 from typing import List, Tuple
-from datetime import datetime, timedelta
+#from datetime import datetime #nur zum messen
 import json
 
 from TrafficLight import TrafficLight#, Phase
@@ -43,7 +43,6 @@ class TrafficLightFetcher:
         except (OSError, json.JSONDecodeError):
             return False
 
-        #now = datetime.now()
         # Erstelle die Ampel Objekte
         for feature in data.get('features', []):
             geom = feature.get('geometry', {})
@@ -66,28 +65,34 @@ class TrafficLightFetcher:
         """
         Gibt alle Ampeln zurück, die maximal `buffer` Meter links und rechts entlang
         der Route (als Polyline) liegen, sortiert nach ihrem Auftreten entlang der Route.
-
-        :param route: Liste von Wegpunkten (lat, lon)
-        :param buffer: Abstand in Metern zur Route
-        :return: Liste relevanter TrafficLight-Objekte
         """
+        #start_time = datetime.now() #nur zum messen
 
-        relevant = []  # Liste von Tuplen (TrafficLight, segment_index, t)
+        relevant = []
         if not route:
             return []
 
         from math import radians, cos, sqrt
+
         R = 6371000.0  # Erdradius in Metern
 
+        # --- Bounding Box vorbereiten (ca. 50–100m Sicherheitsabstand je nach Buffer) ---
+        margin_deg = buffer / 111111.0  # grob 1° ~ 111 km → in Grad umrechnen
+        lat_vals = [lat for lat, _ in route]
+        lon_vals = [lon for _, lon in route]
+        lat_min = min(lat_vals) - margin_deg
+        lat_max = max(lat_vals) + margin_deg
+        lon_min = min(lon_vals) - margin_deg
+        lon_max = max(lon_vals) + margin_deg
+
+        def is_within_bbox(lat: float, lon: float) -> bool:
+            return lat_min <= lat <= lat_max and lon_min <= lon <= lon_max
+
         def proj_and_distance(
-            lat_p: float, lon_p: float,
-            lat1: float, lon1: float,
-            lat2: float, lon2: float
+                lat_p: float, lon_p: float,
+                lat1: float, lon1: float,
+                lat2: float, lon2: float
         ) -> Tuple[float, float]:
-            """
-            Berechnet die Projektion t (0-1) und Distanz (Meter) eines Punktes auf ein Liniensegment
-            via equirectangular Projektion.
-            """
             mean_lat = radians((lat1 + lat2) / 2)
             x1 = radians(lon1) * R * cos(mean_lat)
             y1 = radians(lat1) * R
@@ -107,10 +112,15 @@ class TrafficLightFetcher:
             dist = sqrt((xp - proj_x) ** 2 + (yp - proj_y) ** 2)
             return t_clamped, dist
 
-        # Finde relevante Ampeln mit Segment-Index und t
+        # --- Nur relevante Ampeln in BBox prüfen ---
         for light in self._all_traffic_lights:
             lat_l, lon_l = light.get_location()
-            best = None  # (segment_idx, t)
+
+            # Skip if not in bounding box
+            if not is_within_bbox(lat_l, lon_l):
+                continue
+
+            best = None
             for idx, ((lat1, lon1), (lat2, lon2)) in enumerate(zip(route, route[1:])):
                 t, d = proj_and_distance(lat_l, lon_l, lat1, lon1, lat2, lon2)
                 if d <= buffer:
@@ -119,14 +129,16 @@ class TrafficLightFetcher:
             if best is not None:
                 relevant.append((light, best[0], best[1]))
 
-        # Sortiere nach Segment-Index und t entlang des Segments
         relevant.sort(key=lambda item: (item[1], item[2]))
 
         print('relevante Ampeln:')
         for i, (light, segment, t_val) in enumerate(relevant):
             print(f"Ampel Nr. {i}: {light.get_id()}, Segment: {segment}, t: {t_val}")
 
-        # Extrahiere nur die TrafficLight-Objekte
+        # duration = datetime.now() - start_time #nur zum messen
+        # print(f"[Timing] get_relevant_traffic_lights dauerte {duration.total_seconds() * 1000:.2f} ms") #nur zum messen
+
         return [item[0] for item in relevant]
+
 
 
