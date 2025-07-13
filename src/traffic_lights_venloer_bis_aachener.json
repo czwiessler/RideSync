@@ -8,7 +8,7 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/750549269",
+        "@id": "aachener/750549269",
         "highway": "traffic_signals"
       },
       "geometry": {
@@ -18,12 +18,12 @@
           50.9368909
         ]
       },
-      "id": "node/750549269"
+      "id": "aachener/750549269"
     },
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/8546960460",
+        "@id": "hollar/8546960460",
         "highway": "traffic_signals"
       },
       "geometry": {
@@ -33,12 +33,12 @@
           50.9377961
         ]
       },
-      "id": "node/8546960460"
+      "id": "hollar/8546960460"
     },
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/4279001084",
+        "@id": "venloer/4279001084",
         "highway": "traffic_signals"
       },
       "geometry": {
@@ -48,12 +48,12 @@
           50.9451972
         ]
       },
-      "id": "node/4279001084"
+      "id": "venloer/4279001084"
     },
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/2107720091",
+        "@id": "vogelsanger/2107720091",
         "highway": "traffic_signals"
       },
       "geometry": {
@@ -63,12 +63,12 @@
           50.9428731
         ]
       },
-      "id": "node/2107720091"
+      "id": "vogelsanger/2107720091"
     },
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/2603639844",
+        "@id": "weinsberg/2603639844",
         "highway": "traffic_signals"
       },
       "geometry": {
@@ -78,7 +78,7 @@
           50.9399589
         ]
       },
-      "id": "node/2603639844"
+      "id": "weinsberg/2603639844"
     }
   ]
 }
