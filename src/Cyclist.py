@@ -13,8 +13,8 @@ class Cyclist:
         self,
         speedometer: Speedometer,
         preferred_speed: float = 6.0,
-        min_speed: float = 1.0,
-        max_speed: float = 10.0,
+        min_speed: float = 0.0,
+        max_speed: float = 8.0,
     ):
         # Fahrerzustand
         self.preferred_speed: float = preferred_speed

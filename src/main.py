@@ -36,7 +36,7 @@ def main():
 
     # TrafficLightFetcher vorbereiten
     fetcher = TrafficLightFetcher()
-    if not fetcher.load_from_json("src/traffic_lights_venloer_bis_aachener.json"):
+    if not fetcher.load_from_json("traffic_lights_venloer_bis_aachener.json"):
         print("Konnte traffic_lights_venloer_bis_aachener.json nicht laden.", file=sys.stderr)
         sys.exit(1)
 
