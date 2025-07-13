@@ -1,6 +1,7 @@
 #UpdateLoopController.py
 
 import time
+from datetime import datetime
 from typing import List, Tuple, Optional
 from datetime import timedelta
 
@@ -21,8 +22,10 @@ class UpdateLoopController:
         self.tl_fetcher = tl_fetcher
         self.tl_selector = TrafficLightSelector()
         self.last_next_light: Optional[TrafficLight] = None
-        self.updateTrigger = 30
+        self.updateTrigger = 0
         self.duration = timedelta(seconds=0)
+        self.firstStart = True
+        self.initTime = datetime.now()
 
     def start_loop(self) -> None:
         old_route: List[Tuple[float, float]] = []
@@ -31,17 +34,23 @@ class UpdateLoopController:
         while True:
             old_route = self.update_cycle(self.duration, time_step, old_route)
             time.sleep(time_step.seconds)
-            self.duration += timedelta(seconds=1)
+            self.duration = datetime.now() - self.initTime
 
     def update_cycle(self, duration: timedelta, time_step: timedelta, old_route):
         #TODO später entfernen: mock-zeile zum start der Testläufe
+        while(self.cyclist.get_current_position()[0] == 0.0):
+            time.sleep(5)
+        if(self.firstStart):
+            input("Press enter to continue")
+            self.firstStart = False
+            self.initTime = datetime.now()
         current_position = self.cyclist.get_current_position()
 
         #nur damit die plot achsen sich nicht immer ändern
         conserved_start_point_for_plausible_plotting = current_position
 
 
-        if duration.seconds == 0:
+        if duration.seconds == 0 and current_position[0] != 0.0 and current_position[1] != 0.0:
             destination: Tuple[float, float] = DestinationManager.get_destination()
             old_route: List[Tuple[float, float]] = compute_route(current_position, destination)
             self.tl_selector.set_route(old_route)
@@ -50,13 +59,15 @@ class UpdateLoopController:
         current_position = tracker.get_current_position(self.cyclist, old_route, time_elapsed=time_step)
 
         destination = DestinationManager.get_destination()
-        if(self.updateTrigger  == 30):
+        if(self.updateTrigger  >= 30):
             route = compute_route(current_position, destination)
             self.updateTrigger  = 0
+            old_route = route
+            self.tl_selector.set_route(route)
+        else:
+            route = old_route
         self.updateTrigger  = self.updateTrigger  + 1
-        route = compute_route(current_position, destination)
-        old_route = route
-        self.tl_selector.set_route(route)
+        
 
         traffic_lights: List[TrafficLight] = self.tl_fetcher.get_relevant_traffic_lights(route)
         if not traffic_lights:
@@ -106,8 +117,8 @@ class UpdateLoopController:
             min_speed=self.cyclist.min_speed,
             max_speed=self.cyclist.max_speed
         )
-        self.cyclist.set_advicde_speed(v_opt)
-        print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt}")
+        self.cyclist.set_advicde_speed(v_opt * 3.6)
+        print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt * 3.6}")
 
         #DEBUG block start#####################################################################################
         # Berechne die Geschwindigkeitsdifferenz und übersetze sie in eine Anweisung
@@ -115,9 +126,9 @@ class UpdateLoopController:
             return v_opt - v_actual
         def translate_to_instruction(v_diff: float) -> str:
             if v_diff > 0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
-                return f"Beschleunige um {v_diff:.2f} m/s, um die Ampel zu erreichen."
+                return f"Beschleunige um {v_diff * 3.6 :.2f} km/h, um die Ampel zu erreichen."
             elif v_diff < -0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
-                return f"Reduziere die Geschwindigkeit um {-v_diff:.2f} m/s, um die Ampel nicht zu überfahren."
+                return f"Reduziere die Geschwindigkeit um {-v_diff * 3.6:.2f} km/h, um die Ampel nicht zu überfahren."
             else:
                 return "Halte deine aktuelle Geschwindigkeit bei."
 
