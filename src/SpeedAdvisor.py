@@ -74,5 +74,5 @@ class SpeedAdvisor:
         _, best_delay, best_speed = min(candidates, key=lambda x: x[0])
         # Auf min/max begrenzen
         chosen_speed = max(min_speed, min(best_speed, max_speed))
-        return best_delay, chosen_speed
+        return best_delay, chosen_speed, distance
 

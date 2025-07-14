@@ -1,4 +1,3 @@
-#TrafficLight.py
 from typing import Tuple, List
 import datetime
 from datetime import timedelta
@@ -40,13 +39,13 @@ class TrafficLight:
         start_time = timedelta(seconds=0) + self.offset
         time_in_cycle = (current_time - start_time) % cycle_duration
 
-        if time_in_cycle < self.red_duration:
-            phase = 'red'
-            remaining = self.red_duration - time_in_cycle
-        else:
+        if time_in_cycle < self.green_duration:
             phase = 'green'
-            time_in_green = time_in_cycle - self.red_duration
-            remaining = self.green_duration - time_in_green
+            remaining = self.green_duration - time_in_cycle
+        else:
+            phase = 'red'
+            time_in_red = time_in_cycle - self.green_duration
+            remaining = self.red_duration - time_in_red
 
         return phase, remaining
 

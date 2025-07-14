@@ -34,7 +34,7 @@ class UpdateLoopController:
         while True:
             old_route = self.update_cycle(self.duration, time_step, old_route)
             time.sleep(time_step.seconds)
-            self.duration = datetime.now() - self.initTime
+            self.duration = datetime.now() - self.initTime + timedelta(seconds=60)
 
     def update_cycle(self, duration: timedelta, time_step: timedelta, old_route):
         #TODO später entfernen: mock-zeile zum start der Testläufe
@@ -44,20 +44,18 @@ class UpdateLoopController:
             input("Press enter to continue")
             self.firstStart = False
             self.initTime = datetime.now()
+            duration = timedelta(seconds=60)
         current_position = self.cyclist.get_current_position()
 
         #nur damit die plot achsen sich nicht immer ändern
         conserved_start_point_for_plausible_plotting = current_position
 
 
-        if duration.seconds == 0 and current_position[0] != 0.0 and current_position[1] != 0.0:
+        if duration.seconds == 60 and current_position[0] != 0.0 and current_position[1] != 0.0:
             destination: Tuple[float, float] = DestinationManager.get_destination()
             old_route: List[Tuple[float, float]] = compute_route(current_position, destination)
             self.tl_selector.set_route(old_route)
-
-        tracker = PositionTracker()
-        current_position = tracker.get_current_position(self.cyclist, old_route, time_elapsed=time_step)
-
+        
         destination = DestinationManager.get_destination()
         if(self.updateTrigger  >= 30):
             route = compute_route(current_position, destination)
@@ -107,34 +105,37 @@ class UpdateLoopController:
         v_actual = self.cyclist.get_current_speed()
         print(f"aktuelle Geschwindigkeit: {v_actual}")
 
-        advisor = SpeedAdvisor()
-        delay, v_opt = advisor.choose_best_phase_and_speed(
-            current_position=current_position,
-            next_light=next_light,
-            green_starts=next_light.get_next_green_starts(duration),
-            now=duration,
-            preferred_speed=self.cyclist.preferred_speed,
-            min_speed=self.cyclist.min_speed,
-            max_speed=self.cyclist.max_speed
-        )
-        self.cyclist.set_advicde_speed(v_opt * 3.6)
-        print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt * 3.6}")
+        try:
+            advisor = SpeedAdvisor()
+            delay, v_opt, distance = advisor.choose_best_phase_and_speed(
+                current_position=current_position,
+                next_light=next_light,
+                green_starts=next_light.get_next_green_starts(duration),
+                now=duration,
+                preferred_speed=self.cyclist.preferred_speed,
+                min_speed=self.cyclist.min_speed,
+                max_speed=self.cyclist.max_speed
+            )
+            self.cyclist.set_advicde_speed(v_opt * 3.6, distance)
+            print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt * 3.6}")
 
-        #DEBUG block start#####################################################################################
-        # Berechne die Geschwindigkeitsdifferenz und übersetze sie in eine Anweisung
-        def calculate_speed_diff(v_opt: float, v_actual: float) -> float:
-            return v_opt - v_actual
-        def translate_to_instruction(v_diff: float) -> str:
-            if v_diff > 0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
-                return f"Beschleunige um {v_diff * 3.6 :.2f} km/h, um die Ampel zu erreichen."
-            elif v_diff < -0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
-                return f"Reduziere die Geschwindigkeit um {-v_diff * 3.6:.2f} km/h, um die Ampel nicht zu überfahren."
-            else:
-                return "Halte deine aktuelle Geschwindigkeit bei."
+            #DEBUG block start#####################################################################################
+            # Berechne die Geschwindigkeitsdifferenz und übersetze sie in eine Anweisung
+            def calculate_speed_diff(v_opt: float, v_actual: float) -> float:
+                return v_opt - v_actual
+            def translate_to_instruction(v_diff: float) -> str:
+                if v_diff > 0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
+                    return f"Beschleunige um {v_diff * 3.6 :.2f} km/h, um die Ampel zu erreichen."
+                elif v_diff < -0.01: # kleine Toleranz, um Rundungsfehler zu vermeiden
+                    return f"Reduziere die Geschwindigkeit um {-v_diff * 3.6:.2f} km/h, um die Ampel nicht zu überfahren."
+                else:
+                    return "Halte deine aktuelle Geschwindigkeit bei."
 
-        print(translate_to_instruction(calculate_speed_diff(v_opt, v_actual)))
+            print(translate_to_instruction(calculate_speed_diff(v_opt, v_actual)))
         # DEBUG block ende#####################################################################################
-        
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            print("Skipped one cycle")
 
         # plot_route(
         #     route=route,

@@ -32,9 +32,9 @@ class Cyclist:
     def get_current_speed(self) -> float:
         return gpsd.get_current().hspeed * 3.6
     
-    def set_advicde_speed(self, adviced_speed):
+    def set_advicde_speed(self, adviced_speed, distance):
         self.lcd.clear()
         self.lcd.cursor_pos = (0, 0) 
         self.lcd.write_string(f"{self.get_current_speed():.2f}")
         self.lcd.cursor_pos = (1, 0) 
-        self.lcd.write_string(f"{adviced_speed:.2f}")
+        self.lcd.write_string(f"{adviced_speed:.2f} {distance:.2f}")
