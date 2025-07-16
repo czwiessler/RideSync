@@ -1,11 +1,7 @@
-from typing import List, Tuple
-import math
-
 from datetime import timedelta
+from typing import List, Tuple
 
-from Cyclist import Cyclist
 from utils import haversine
-
 
 
 class PositionTracker:

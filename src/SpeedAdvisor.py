@@ -1,8 +1,8 @@
-from typing import Tuple, List
 from datetime import timedelta
+from typing import Tuple, List
 
-from utils import haversine
 from TrafficLight import TrafficLight
+from utils import haversine
 
 
 class SpeedAdvisor:
@@ -56,7 +56,6 @@ class SpeedAdvisor:
                     return timedelta(seconds=0), max(min_speed, min(speed_required, max_speed)), distance
                 # → Ansonsten: aktuelle Grünphase nicht mehr erreichbar – weiter mit zukünftigen Phasen
 
-
         # 2. Sonst prüfe kommende Grünphasen
         candidates: List[Tuple[float, timedelta, float]] = []  # (Abweichung, delay, speed_required)
         for delay in green_starts:
@@ -75,4 +74,3 @@ class SpeedAdvisor:
         # Auf min/max begrenzen
         chosen_speed = max(min_speed, min(best_speed, max_speed))
         return best_delay, chosen_speed, distance
-

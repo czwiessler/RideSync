@@ -1,14 +1,17 @@
 from typing import Tuple
-import gpsd
+
 import RPi.GPIO as GPIO
+import gpsd
 from RPLCD import CharLCD
 
 import Speedometer
+
 
 class Cyclist:
     """
         PI Input
     """
+
     def __init__(
         self,
         speedometer: Speedometer,
@@ -21,20 +24,18 @@ class Cyclist:
         self.min_speed: float = min_speed
         self.max_speed: float = max_speed
         self.speedotmeter = speedometer
-        self.lcd = CharLCD(numbering_mode = GPIO.BOARD, cols=16, rows=2, pin_rs=37, pin_e=35, pins_data=[33, 31, 29, 23])
+        self.lcd = CharLCD(numbering_mode=GPIO.BOARD, cols=16, rows=2, pin_rs=37, pin_e=35, pins_data=[33, 31, 29, 23])
         gpsd.connect()
 
-
     def get_current_position(self) -> Tuple[float, float]:
-        return (gpsd.get_current().lat,gpsd.get_current().lon)
-
+        return (gpsd.get_current().lat, gpsd.get_current().lon)
 
     def get_current_speed(self) -> float:
         return gpsd.get_current().hspeed * 3.6
-    
+
     def set_advicde_speed(self, adviced_speed, distance):
         self.lcd.clear()
-        self.lcd.cursor_pos = (0, 0) 
+        self.lcd.cursor_pos = (0, 0)
         self.lcd.write_string(f"{self.get_current_speed():.2f}")
-        self.lcd.cursor_pos = (1, 0) 
+        self.lcd.cursor_pos = (1, 0)
         self.lcd.write_string(f"{adviced_speed:.2f} {distance:.2f}")

@@ -2,12 +2,12 @@
 """
 Lädt Ampeldaten aus einer GeoJSON-Datei und liefert relevante Ampeln entlang einer Route.
 """
-from typing import List, Tuple
-#from datetime import datetime #nur zum messen
+# from datetime import datetime #nur zum messen
 import json
 from datetime import timedelta
+from typing import List, Tuple
 
-from TrafficLight import TrafficLight#, Phase
+from TrafficLight import TrafficLight  # , Phase
 
 
 class TrafficLightFetcher:
@@ -44,11 +44,11 @@ class TrafficLightFetcher:
         except (OSError, json.JSONDecodeError):
             return False
 
-        #gemessene werte für strecke innere kanalstr, erste ampel venloer bis letzte ampel aachener
+        # gemessene werte für strecke innere kanalstr, erste ampel venloer bis letzte ampel aachener
         mock_configs = {
-            "venloer/4279001084": (57, 53, 0), #venloer
-            "vogelsanger/2107720091": (65, 45, 6), #vogelsanger
-            "weinsberg/2603639844": (70, 40, 60), #weinsberg
+            "venloer/4279001084": (57, 53, 0),  # venloer
+            "vogelsanger/2107720091": (65, 45, 6),  # vogelsanger
+            "weinsberg/2603639844": (70, 40, 60),  # weinsberg
             # "hollar/8546960460": (90, 20, 32),  # hollar
             # "aachener/750549269": (55, 55, 65), #aachener
         }
@@ -84,7 +84,7 @@ class TrafficLightFetcher:
         Gibt alle Ampeln zurück, die maximal `buffer` Meter links und rechts entlang
         der Route (als Polyline) liegen, sortiert nach ihrem Auftreten entlang der Route.
         """
-        #start_time = datetime.now() #nur zum messen
+        # start_time = datetime.now() #nur zum messen
 
         relevant = []
         if not route:
@@ -153,10 +153,4 @@ class TrafficLightFetcher:
         for i, (light, segment, t_val) in enumerate(relevant):
             print(f"Ampel Nr. {i}: {light.get_id()}, Segment: {segment}, t: {t_val}")
 
-        # duration = datetime.now() - start_time #nur zum messen
-        # print(f"[Timing] get_relevant_traffic_lights dauerte {duration.total_seconds() * 1000:.2f} ms") #nur zum messen
-
         return [item[0] for item in relevant]
-
-
-

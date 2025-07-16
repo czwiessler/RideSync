@@ -3,14 +3,13 @@
 Nutzt die OpenRouteService API, um eine echte Route zu holen.
 """
 
-import os
-import requests
 from typing import List, Tuple
 
-#ORS_API_KEY = os.getenv("ORS_API_KEY")
-#ORS_API_KEY = "5b3ce3597851110001cf624845c31aefb65f430fbd3184463a7b9edb"
-ORS_API_KEY = "5b3ce3597851110001cf62488edd5abcadf44e8fae1dd94890943db2"
+import requests
+import os
+
 ORS_BASE_URL = "https://api.openrouteservice.org/v2/directions/driving-car"
+ORS_API_KEY = os.environ.get("ORS_API_KEY")
 
 def compute_route(start: Tuple[float, float], end: Tuple[float, float]) -> List[Tuple[float, float]]:
     """
@@ -24,12 +23,12 @@ def compute_route(start: Tuple[float, float], end: Tuple[float, float]) -> List[
 
     # OpenRouteService erwartet lon,lat
     start_str = f"{start[1]},{start[0]}"
-    end_str   = f"{end[1]},{end[0]}"
+    end_str = f"{end[1]},{end[0]}"
 
     params = {
         "api_key": ORS_API_KEY,
-        "start":   start_str,
-        "end":     end_str
+        "start": start_str,
+        "end": end_str
     }
     try:
         resp = requests.get(ORS_BASE_URL, params=params, timeout=10)
@@ -38,11 +37,6 @@ def compute_route(start: Tuple[float, float], end: Tuple[float, float]) -> List[
         raise RuntimeError(f"Fehler beim ORS-Request: {e}")
 
     data = resp.json()
-
-    #printe das json in lesbarer form
-    #import json
-    #print(json.dumps(data, indent=2))
-
 
     # GeoJSON FeatureCollection → erstes Feature → geometry.coordinates
     coords: List[List[float]] = data["features"][0]["geometry"]["coordinates"]

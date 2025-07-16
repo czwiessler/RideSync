@@ -1,7 +1,8 @@
 # utils.py
 
-from typing import Tuple, List
 import math
+from typing import Tuple, List
+
 
 def haversine(
         coord1: Tuple[float, float],
@@ -74,4 +75,3 @@ def haversine_along_route(
     total_distance += haversine(route[end_index], end_point)
 
     return total_distance
-

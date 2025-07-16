@@ -1,5 +1,6 @@
-import RPi.GPIO as GPIO
 import time
+
+import RPi.GPIO as GPIO
 
 
 class Speedometer:
@@ -13,11 +14,6 @@ class Speedometer:
         # Set up GPIO - these should be done in the constructor
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.PULSE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        # Pass self to the callback using a lambda or functools.partial if needed
-        # For GPIO callbacks, it's often cleaner to make the callback a method
-        # and ensure it can be called without an instance reference if directly assigned,
-        # or bind it correctly. In this case, we'll make it an instance method
-        # and pass a reference to the instance's method.
         GPIO.add_event_detect(self.PULSE_PIN, GPIO.FALLING, callback=self._pulse_detected_callback, bouncetime=50)
 
     # Renamed to a private-like method since it's an internal callback
@@ -49,4 +45,3 @@ class Speedometer:
         Cleans up the GPIO settings. Should be called when the program exits.
         """
         GPIO.cleanup()
-

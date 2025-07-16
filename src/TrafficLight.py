@@ -1,6 +1,6 @@
-from typing import Tuple, List
 import datetime
 from datetime import timedelta
+from typing import Tuple, List
 
 
 class TrafficLight:
@@ -12,7 +12,7 @@ class TrafficLight:
         self.latitude: float = lat
         self.longitude: float = lon
 
-        # Neue Mock-Parameter
+        # Mock-Parameter
         self.green_duration: datetime.timedelta = datetime.timedelta(seconds=10)
         self.red_duration: datetime.timedelta = datetime.timedelta(seconds=40)
         self.offset: datetime.timedelta = datetime.timedelta(seconds=0)
@@ -24,11 +24,10 @@ class TrafficLight:
     def get_id(self) -> str:
         return f"{self.id}"
 
-
     def get_phase(
             self,
             current_time: timedelta
-    ) -> Tuple[str, timedelta.seconds]: #'green' or 'red', phase rest duration
+    ) -> Tuple[str, timedelta.seconds]:  # 'green' or 'red', phase rest duration
         """
         Bestimmt die aktuelle Phase der Ampel und die verbleibende Zeit bis zum Phasenwechsel.
         :param current_time:
@@ -62,7 +61,7 @@ class TrafficLight:
         # Zeit innerhalb des Zyklus unter Berücksichtigung des Offsets
         time_in_cycle = (current_time - self.offset) % cycle_duration
         # Verzögerung bis zum nächsten Grünstart
-        #first_delay = cycle_duration - time_in_cycle
+        # first_delay = cycle_duration - time_in_cycle
 
         if time_in_cycle < self.red_duration:
             first_delay = self.red_duration - time_in_cycle
@@ -73,6 +72,3 @@ class TrafficLight:
         for i in range(50):
             starts.append(first_delay + i * cycle_duration)
         return starts
-
-
-

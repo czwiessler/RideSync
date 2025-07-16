@@ -1,12 +1,15 @@
-from typing import Tuple, List, Optional
 import math
+from typing import Tuple, List, Optional
+
 from TrafficLight import TrafficLight
 from utils import haversine
+
 
 class TrafficLightSelector:
     """
     Wählt die nächste Ampel entlang einer vorgegebenen Route basierend auf der aktuellen Position aus.
     """
+
     def __init__(self):
         self.route: List[Tuple[float, float]] = []
         self._cum_distances: List[float] = []
@@ -18,13 +21,6 @@ class TrafficLightSelector:
         """
         self.route = route
         self._compute_cumulative_distances()
-
-    # def _haversine(self, a: Tuple[float, float], b: Tuple[float, float]) -> float:
-    #     """
-    #     Berechnet die euklidische Distanz zwischen zwei Punkten.
-    #     Bei echten GPS-Daten kann hier später auf einen geodätischen Ansatz umgestellt werden.
-    #     """
-    #     return math.hypot(a[0] - b[0], a[1] - b[1])
 
     def _compute_cumulative_distances(self) -> None:
         """

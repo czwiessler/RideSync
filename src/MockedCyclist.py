@@ -5,6 +5,7 @@ class MockedCyclist:
     """
     MockedRadfahrer hält Zustand und wählt Geschwindigkeit mittels SpeedAdvisor.
     """
+
     def __init__(
         self,
         start_position: Tuple[float, float],
@@ -19,16 +20,12 @@ class MockedCyclist:
         self.min_speed: float = min_speed
         self.max_speed: float = max_speed
 
-
     def get_current_position(self) -> Tuple[float, float]:
-        #TODO IMPLEMENT GPS-Schnittstelle, angeknüpft an GPS-Modul
         return self.current_position
 
-
     def get_current_speed(self) -> float:
-        #TODO IMPLEMENT Tacho-Schnittstelle
+        # TODO IMPLEMENT Tacho-Schnittstelle
         return self.current_speed
-
 
     # TODO mock wird später nicht mehr genutzt, da Fahrrad tatsächlich Geschwindigkeit ändert
     def change_velocity_mock(
@@ -37,4 +34,3 @@ class MockedCyclist:
     ) -> float:
         self.current_speed = advised_speed
         return self.current_speed
-

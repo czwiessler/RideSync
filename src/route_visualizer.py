@@ -1,9 +1,11 @@
-import matplotlib.pyplot as plt
-import contextily as ctx
-from typing import List
-from TrafficLight import TrafficLight
 from datetime import timedelta
+from typing import List
+
+import contextily as ctx
+import matplotlib.pyplot as plt
 from pyproj import Transformer
+
+from TrafficLight import TrafficLight
 
 # Transformer von WGS84 (lat/lon) nach Web Mercator (EPSG:3857)
 transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
