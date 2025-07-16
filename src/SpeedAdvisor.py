@@ -25,7 +25,7 @@ class SpeedAdvisor:
         preferred_speed: float,
         min_speed: float,
         max_speed: float
-    ) -> Tuple[timedelta, float]:
+    ) -> Tuple[timedelta, float, float]:
         """
         Wählt die beste erreichbare Phase, prüft zuerst die aktuelle Phase.
 
@@ -46,14 +46,14 @@ class SpeedAdvisor:
 
             if time_with_preferred <= max_time:
                 # preferred_speed reicht aus – perfekt!
-                return timedelta(seconds=0), preferred_speed
+                return timedelta(seconds=0), preferred_speed, distance
             else:
                 # Prüfe, ob man überhaupt noch rechtzeitig ankommen kann
                 time_with_max_speed = distance / max_speed
                 if time_with_max_speed <= max_time:
                     # Mit max_speed gerade noch erreichbar
                     speed_required = distance / max_time
-                    return timedelta(seconds=0), max(min_speed, min(speed_required, max_speed))
+                    return timedelta(seconds=0), max(min_speed, min(speed_required, max_speed)), distance
                 # → Ansonsten: aktuelle Grünphase nicht mehr erreichbar – weiter mit zukünftigen Phasen
 
 
@@ -68,7 +68,7 @@ class SpeedAdvisor:
 
         if not candidates:
             # Keine kommenden Phasen: Behalte preferred_speed
-            return timedelta(seconds=0), preferred_speed
+            return timedelta(seconds=0), preferred_speed, distance
 
         # Wähle Phase mit geringster Abweichung
         _, best_delay, best_speed = min(candidates, key=lambda x: x[0])

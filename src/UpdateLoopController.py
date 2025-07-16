@@ -34,7 +34,7 @@ class UpdateLoopController:
         while True:
             old_route = self.update_cycle(self.duration, time_step, old_route)
             time.sleep(time_step.seconds)
-            self.duration = datetime.now() - self.initTime + timedelta(seconds=60)
+            self.duration = datetime.now() - self.initTime# + timedelta(seconds=57)
 
     def update_cycle(self, duration: timedelta, time_step: timedelta, old_route):
         #TODO später entfernen: mock-zeile zum start der Testläufe
@@ -44,14 +44,15 @@ class UpdateLoopController:
             input("Press enter to continue")
             self.firstStart = False
             self.initTime = datetime.now()
-            duration = timedelta(seconds=60)
+            #duration = timedelta(seconds=60)
         current_position = self.cyclist.get_current_position()
 
         #nur damit die plot achsen sich nicht immer ändern
         conserved_start_point_for_plausible_plotting = current_position
 
 
-        if duration.seconds == 60 and current_position[0] != 0.0 and current_position[1] != 0.0:
+        #if duration.seconds == 60 and current_position[0] != 0.0 and current_position[1] != 0.0:
+        if duration.seconds == 0.0 and current_position[0] != 0.0 and current_position[1] != 0.0:
             destination: Tuple[float, float] = DestinationManager.get_destination()
             old_route: List[Tuple[float, float]] = compute_route(current_position, destination)
             self.tl_selector.set_route(old_route)
@@ -116,6 +117,7 @@ class UpdateLoopController:
                 min_speed=self.cyclist.min_speed,
                 max_speed=self.cyclist.max_speed
             )
+            print(f"delay: {delay}, v_opt: {v_opt}, distance: {distance}")
             self.cyclist.set_advicde_speed(v_opt * 3.6, distance)
             print(f"delay bis zur nächsten Grünphase: {delay}, optimale Geschwindigkeit: {v_opt * 3.6}")
 

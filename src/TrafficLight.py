@@ -62,7 +62,13 @@ class TrafficLight:
         # Zeit innerhalb des Zyklus unter Berücksichtigung des Offsets
         time_in_cycle = (current_time - self.offset) % cycle_duration
         # Verzögerung bis zum nächsten Grünstart
-        first_delay = cycle_duration - time_in_cycle
+        #first_delay = cycle_duration - time_in_cycle
+
+        if time_in_cycle < self.red_duration:
+            first_delay = self.red_duration - time_in_cycle
+        else:
+            first_delay = cycle_duration - (time_in_cycle - self.red_duration)
+
         starts: List[timedelta] = []
         for i in range(50):
             starts.append(first_delay + i * cycle_duration)
